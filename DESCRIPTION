@@ -1,0 +1,37 @@
+Package: factReg
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Authors@R: 
+    c(person(given = "Kruijer",
+             family = "Willem",
+             role = c("aut", "cre"),
+             email = "willem.kruijer@wur.nl",
+             comment = c(ORCID = "0000-0001-7179-1733")),
+      person(given = "Bart-Jan",
+             family = "van Rossum",
+             role = "aut",
+             comment = c(ORCID = "0000-0002-8673-2514")),
+      person(given = "Vahe",
+             family = "Avagyan",
+             role = "ctb",
+             comment = c(ORCID = "0000-0001-5838-4850")))
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: GPL
+Depends: 
+    R (>= 3.6)
+Imports: 
+    BGLR,
+    glmnet,
+    mathjaxr,
+    Matrix,
+    reshape2,
+    rrBLUP,
+    stats
+Encoding: UTF-8
+LazyData: true
+LazyDataCompression: gzip
+RoxygenNote: 7.2.3
+Roxygen: list(markdown = TRUE)
+RdMacros: mathjaxr
