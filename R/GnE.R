@@ -215,7 +215,7 @@ GnE <- function(dat,
 
     for (ind in indices) {
       for (env in levels(dat$E)) {
-        dat[which(dat$E == env), ind] <- indicesData[env, ind]
+        dat[which(dat$E == env), ind] <- indicesData[[env, ind]]
       }
     }
   }
