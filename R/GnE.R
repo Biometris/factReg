@@ -462,8 +462,10 @@ GnE <- function(dat,
                       stringsAsFactors = FALSE)
   cfeDf$geno <- factor(cfeDf$geno, levels = rownames(parGeno))
   cfeDf$index <- factor(cfeDf$index, levels = indices)
-  parGenoIndices <- reshape2::dcast(cfeDf, geno ~ index, fill = 0, drop = FALSE,
-                                    value.var = "val")
+  parGenoIndices <- reshape(cfeDf, direction = "wide", timevar = "index",
+                            idvar = "geno")
+  colnames(parGenoIndices)[-1] <- levels(cfeDf$index)
+
   parGeno <- merge(parGeno, parGenoIndices, by.x = "row.names", by.y = "geno")
   rownames(parGeno) <- parGeno[["Row.names"]]
   parGeno <- parGeno[, c("main", indices)]

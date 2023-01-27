@@ -26,7 +26,6 @@ Imports:
     glmnet,
     mathjaxr,
     Matrix,
-    reshape2,
     rrBLUP,
     stats
 Encoding: UTF-8
