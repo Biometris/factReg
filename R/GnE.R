@@ -130,7 +130,7 @@
 #'   main effects for the training environments and the averaged indices.}
 #'   \item{parGeno}{dataframe containing the estimated genotypic main effects
 #'   (first column) and sensitivities (subsequent columns)}
-#'   \item{main.par}{If the option mainCovariates is used, this vector contains
+#'   \item{mainPar}{If the option mainCovariates is used, this vector contains
 #'   estimates of the main effects of the indices specified in mainCovariates.}
 #'   \item{trainAccuracyEnv}{a data-frame with the accuracy (r) for each
 #'   training environment, as well as the root mean squre error (RMSE), mean
@@ -186,13 +186,10 @@ GnE <- function(dat,
                 quadratic = FALSE,
                 genoAcc = NULL,
                 verbose = FALSE) {
-
   stopifnot(penG >= 0) # also > 1 is possible!
   stopifnot(penE >= 0)
-
   scaling <- match.arg(scaling)
   corType <- match.arg(corType)
-
   if (is.null(lambda)) {
     lambdaProvided <- FALSE
   } else {
@@ -208,21 +205,15 @@ GnE <- function(dat,
   ## Remove missing values from training envs.
   dat <- dat[!(is.na(dat$Y) & dat$E %in% trainEnv),]
   dat <- droplevels(dat)
-
   ##################
-
   if (!is.null(indicesData)) {
-
     indices <- colnames(indicesData)
     nIndices <- ncol(indicesData)
-
     stopifnot(all(levels(dat$E) %in% rownames(indicesData)))
     dat <- dat[, setdiff(names(dat), indices)]
-
     qw <- matrix(NA, nrow(dat), nIndices)
     colnames(qw) <- indices
     dat <- data.frame(dat, qw)
-
     for (ind in indices) {
       for (env in levels(dat$E)) {
         dat[which(dat$E == env), ind] <- indicesData[[env, ind]]
@@ -230,7 +221,6 @@ GnE <- function(dat,
     }
   }
   ###################
-
   ## Scale environmental variables.
   if (scaling == "train") {
     muTr <- colMeans(dat[dat$E %in% trainEnv, indices])
@@ -246,10 +236,8 @@ GnE <- function(dat,
     stopifnot(length(weight)==nrow(dat))
     dat$W <- weight
   }
-
   ## Split dat into training and test set.
   dTrain <- dat[dat$E %in% trainEnv, ]
-
   redundantGeno <- names(which(table(dTrain$G[!is.na(dTrain$Y)]) < 10))
   if (length(redundantGeno) > 0) {
     warning("the following genotypes have < 10 observations, and are removed:",
@@ -266,11 +254,9 @@ GnE <- function(dat,
   } else{
     dTest <- NULL
   }
-
   nEnvTest <- length(testEnv)
   nEnvTrain <- nlevels(dat$E) - nEnvTest
   nGenoTrain <- nlevels(dTrain$G)
-
   ## When partition == data.frame() (the default),
   ## do leave one environment out cross-validation.
   if (!is.null(partition)) {
@@ -290,25 +276,21 @@ GnE <- function(dat,
     foldid <- NULL
     if (is.null(nfolds)) {nfolds <- 10}
   }
-
   # just to het the names ...
   w2 <- aggregate(x = dTrain$Y, by = list(dTrain$G),
                   FUN = mean, na.rm = TRUE)
   e3 <- aggregate(x = dTrain$Y, by = list(dTrain$E),
                   FUN = mean, na.rm = TRUE)
-
   mm <- Matrix::sparse.model.matrix(Y ~ E + G, data = dTrain)
   modelMain <- glmnet::glmnet(y = dTrain$Y, x = mm, thresh = 1e-18, lambda = 0)
   cf <- c(modelMain$a0, modelMain$beta[-1])
   names(cf) <- c("(Intercept)", paste0('E', e3$Group.1[-1]),
                  paste0('G', w2$Group.1[-1]))
-
   mainOnly <- rep(0, nGenoTrain)
   names(mainOnly) <- levels(dTrain$G)
   mainTemp <- cf[(nEnvTrain + 1):(nEnvTrain + nGenoTrain - 1)]
   names(mainTemp) <- substring(names(mainTemp), first = 2)
   mainOnly[names(mainTemp)] <- mainTemp
-
   ## Define the design matrix for the factorial regression model.
   geFormula <- as.formula(paste0("Y ~ -1 + E + G +",
                                  paste(paste0(indices, ":G"),
@@ -319,14 +301,13 @@ GnE <- function(dat,
   on.exit(options(opts), add = TRUE)
   ma <- Matrix::sparse.model.matrix(geFormula, data = rbind(dTrain, dTest))
   colnames(ma)[1:(nEnvTrain + nGenoTrain + nEnvTest - 1)] <-
-    substring(colnames(ma)[1:(nEnvTrain + nGenoTrain + nEnvTest - 1)], first = 2)
-
+    substring(colnames(ma)[1:(nEnvTrain + nGenoTrain + nEnvTest - 1)],
+              first = 2)
   if (!is.null(mainCovariates)) {
     ncolMaOld <- ncol(ma)
     ma <- cbind(ma,
                 Matrix::Matrix(as.matrix(rbind(dTrain, dTest)[, mainCovariates])))
   }
-
   if (quadratic) {
     ## Add quadratic columns to design matrix.
     mQuad <- ma[, (nEnvTrain + nEnvTest + nGenoTrain):ncol(ma)] ^ 2
@@ -337,13 +318,11 @@ GnE <- function(dat,
     # If there are mainCovariates, these are not included here
     indices <- c(indices, paste0(indices, "_quad"))
   }
-
   # define the vector indicating to which extent parameters are to be penalized.
   penaltyFactorA <- rep(1, ncol(ma))
   penaltyFactorA[1:(nEnvTrain + nEnvTest)] <- penE
   penaltyFactorA[(nEnvTrain + nEnvTest + 1):
                    (nEnvTrain + nEnvTest + nGenoTrain - 1)] <- penG
-
   if (!is.null(mainCovariates)) {
     if (quadratic) {
       tempInd <- c((ncolMaOld + 1):(ncolMaOld + length(mainCovariates)),
@@ -356,15 +335,11 @@ GnE <- function(dat,
   } else {
     tempInd <- integer()
   }
-
   # note: even if unpenalized, the estimated main effects change,
   # depending on lambda!
-
   # run glmnet, either (if provided) for a single value of lambda
   # (using glmnet), or using cv.glmnet
-
   thr <- 1e-07
-
   if (lambdaProvided && length(lambda) == 1) {
     if (lambda == 0) {
       thr <- 1e-11
@@ -381,12 +356,11 @@ GnE <- function(dat,
     lambdaSequence <- lambda
     cfe <- glmnetOutA$beta
     mu <- as.numeric(glmnetOutA$a0)
-
     if (!is.null(mainCovariates)) {
-      main.par <- glmnetOutA$beta[tempInd]
-      names(main.par) <- colnames(ma)[tempInd]
+      mainPar <- glmnetOutA$beta[tempInd]
+      names(mainPar) <- colnames(ma)[tempInd]
     } else {
-      main.par <- NULL
+      mainPar <- NULL
     }
   } else {
     glmnetOutA <- glmnet::cv.glmnet(x = ma[1:nrow(dTrain),], y = dTrain$Y,
@@ -401,13 +375,11 @@ GnE <- function(dat,
     lambdaIndex <- which(lambda == glmnetOutA$lambda.min)
     cfe <- glmnetOutA$glmnet.fit$beta
     mu <- glmnetOutA$glmnet.fit$a0[lambdaIndex]
-
     if (postLasso) {
       lassoModel <- glmnet::glmnet(x = ma , y = dTrain$Y, alpha = 1,
                                    weights = dTrain$W,
                                    family = "gaussian",
                                    lambda = glmnetOutA$lambda.min)
-
       ## Post-Selection, with selected significant variables: Refitting.
       ## Select the non-zero coefficients of env. variables.
       coeffic <- coef(lassoModel)[-1]
@@ -427,9 +399,9 @@ GnE <- function(dat,
       mu <- as.numeric(glmnetOutA$a0)
     }
     if (!is.null(mainCovariates)) {
-      main.par <- glmnetOutA$glmnet.fit$beta[tempInd, lambdaIndex]
+      mainPar <- glmnetOutA$glmnet.fit$beta[tempInd, lambdaIndex]
     } else {
-      main.par <- NULL
+      mainPar <- NULL
     }
   }
   ## Extract from the output the estimated environmental main effects
@@ -465,7 +437,6 @@ GnE <- function(dat,
   parGenoIndices <- reshape(cfeDf, direction = "wide", timevar = "index",
                             idvar = "geno")
   colnames(parGenoIndices)[-1] <- levels(cfeDf$index)
-
   parGeno <- merge(parGeno, parGenoIndices, by.x = "row.names", by.y = "geno")
   rownames(parGeno) <- parGeno[["Row.names"]]
   parGeno <- parGeno[, c("main", indices)]
@@ -555,11 +526,11 @@ GnE <- function(dat,
                              envMainPred = as.numeric(parEnvTrain))
   if (!is.null(genoAcc)) {
     predTrain <- predTrain[which(dTrain$G %in% genoAcc)]
-    dTrain <- dTrain[dTrain$G %in% genoAcc,]
+    dTrain <- dTrain[dTrain$G %in% genoAcc, ]
     dTrain <- droplevels(dTrain)
     if (!is.null(testEnv)) {
       predTest <- predTest[which(dTest$G %in% genoAcc)]
-      dTest <- dTest[dTest$G %in% genoAcc,]
+      dTest <- dTest[dTest$G %in% genoAcc, ]
       dTest <- droplevels(dTest)
     }
   }
@@ -572,11 +543,9 @@ GnE <- function(dat,
   names(fm) <- as.character(indFrameTrain$E)
   #s3 <- split(as.numeric(mainOnly[as.character(dTrain$G)]) + as.numeric(fm[as.character(dTrain$E)]), dTrain$E)
   s3 <- split(as.numeric(predict(modelMain, newx = mm)), dTrain$E)
-
   #s3 <- split(as.numeric(mainOnly[as.character(dTrain$G)]) + as.numeric(envMain[dTrain$E,1]), dTrain$E)
   #  + fm[as.character(dTrain$E)] ??
   # plot(cfe[1:25], cf[1:25])
-
   ## Compute statistics for training data.
   trainAccuracyEnv <-
     data.frame(Env = levels(dTrain$E),
@@ -692,7 +661,7 @@ GnE <- function(dat,
               envInfoTrain = indicesTrain,
               envInfoTest  = indicesTest,
               parGeno = parGeno,
-              main.par = main.par,
+              mainPar = mainPar,
               trainAccuracyEnv = trainAccuracyEnv,
               testAccuracyEnv = testAccuracyEnv,
               trainAccuracyGeno = trainAccuracyGeno,
@@ -707,6 +676,5 @@ GnE <- function(dat,
               indices = indices,
               postLasso = postLasso,
               quadratic = quadratic)
-  #dTrain = dTrain, dTest = dTest)
   return(out)
 }
