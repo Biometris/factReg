@@ -22,7 +22,7 @@ License: GPL
 Depends: 
     R (>= 3.6)
 Imports: 
-    BGLR,
+    gaston,
     glmnet,
     mathjaxr,
     Matrix,

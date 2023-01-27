@@ -11,8 +11,8 @@ frBLUP(
   E,
   indices = NULL,
   indicesData = NULL,
-  main.covariates = NULL,
-  main.cov.pen = 1,
+  mainCovariates = NULL,
+  mainCovPen = 1,
   K,
   method = c("factReg", "perGeno"),
   testEnv = NULL,
@@ -35,79 +35,86 @@ frBLUP(
 )
 }
 \arguments{
-\item{dat}{A data-frame with data from multi-environment trials.
+\item{dat}{A \code{data.frame} with data from multi-environment trials.
 Each row corresponds to a particular genotype in a particular environment.
 The data do not need to be balanced, i.e. an environment does not need to
-contain all genotypes. dat should contain the training as well as the test
-environments (see testEnv)}
+contain all genotypes. \code{dat} should contain the training as well as the
+test environments (see testEnv)}
 
 \item{Y}{The trait to be analyzed: either of type character, in which case
-it should be one of the column names in dat, or numeric, in which case the Yth
-column of dat will be analyzed.}
+it should be one of the column names in \code{dat}, or numeric, in which
+case the Yth column of \code{dat} will be analyzed.}
 
-\item{G}{The column in dat containing the factor genotype (either character or
-numeric).}
+\item{G}{The column in \code{dat} containing the factor genotype (either
+character or numeric).}
 
-\item{E}{The column in dat containing the factor environment (either character
-or numeric).}
+\item{E}{The column in \code{dat} containing the factor environment
+(either character or numeric).}
 
-\item{indices}{The columns in dat containing the environmental indices (vector
-of type character). Alternatively, if the indices are always constant within
-environments (i.e. not genotype dependent), the environmental data can also
-be provided using the argument indicesData (see below).}
+\item{indices}{The columns in \code{dat} containing the environmental
+indices (vector of type character). Alternatively, if the indices are always
+constant within environments (i.e. not genotype dependent), the
+environmental data can also be provided using the argument \code{indicesData}
+(see below).}
 
-\item{indicesData}{An optional data-frame containing environmental indices
-(covariates); one value for each environment and index. It should have the
-environment names as row-names (corresponding to the names contained in dat$E);
-the column names are the indices. If indices (see before) is also provided,
-the latter will be ignored.}
+\item{indicesData}{An optional \code{data.frame} containing environmental
+indices (covariates); one value for each environment and index. It should
+have the environment names as row names (corresponding to the names
+contained in \code{dat$E}); the column names are the indices. If
+\code{indices} (see before) is also provided, the latter will be ignored.}
 
-\item{main.covariates}{Optional. The columns in dat containing main covariates,
-i.e. with effects that are constant across genotypes. May overlap with
-indices.}
+\item{mainCovariates}{Optional. The columns in \code{dat} containing main
+covariates, i.e. with effects that are constant across genotypes. May
+overlap with indices.}
 
-\item{main.cov.pen}{Numeric vector corresponding to main.covariates,
+\item{mainCovPen}{Numeric vector corresponding to \code{mainCovariates},
 indicating the relative penalties used in glmnet. Default: all 1.}
 
 \item{K}{kinship matrix, or a list of such matrices. (TO DO: checks)}
 
-\item{method}{(TO DO) 'factReg' (default) or 'perGeno'}
+\item{method}{(TO DO) "factReg" (default) or "perGeno"}
 
 \item{testEnv}{vector (character). Data from these environments are not used
 for fitting the model. Accuracy is evaluated for training and test
-environments separately. The default is NULL, i.e. no test environments,
-in which case the whole dataset is training. It is also possible that
-there are test environments, but without any data; in this case, no accuracy
-is reported for test environments (CHECK correctness).}
+environments separately. The default is \code{NULL}, i.e. no test
+environments, in which case the whole dataset is training. It is also
+possible that there are test environments, but without any data; in this
+case, no accuracy is reported for test environments (CHECK correctness).}
 
 \item{type}{Character vector of length nrow(dat), which whould indicate the
-type of observation, which should be one of 'GE', 'GnE', 'nGE', 'nGnE'}
+type of observation, which should be one of "GE", "GnE", "nGE", "nGnE"}
 
-\item{target}{character; should be either 'GnE' or 'nGnE' (default)}
+\item{target}{character; should be either "GnE" or "nGnE" (default)}
 
-\item{genPred}{vector of length nrow(dat); default NULL}
+\item{genPred}{vector of length \code{nrow(dat)}; default \code{NULL}}
 
-\item{gpWeight}{vector of length nrow(dat); default NULL}
+\item{gpWeight}{vector of length \code{nrow(dat)}; default \code{NULL}}
 
-\item{useRes}{If method is 'perGeno': Indicates whether the genotype-specific regressions are to be
-fitted on the residuals of a model with main effects. 0 means no
-(i.e. fit the regressions on the original data). 1:
-residuals of a model with environmental main effects. 2 (default): genotypic and
-environmental main effects.}
+\item{useRes}{If \code{method} is "perGeno": Indicates whether the
+genotype-specific regressions are to be fitted on the residuals of a model
+with main effects. 0 means no (i.e. fit the regressions on the original
+data). 1: residuals of a model with environmental main effects.
+2 (default): genotypic and environmental main effects.}
 
-\item{outputFile}{The file name of the output files (without extensions,
-which are added by the function)}
+\item{outputFile}{The file name of the output files, without .csv extension,
+which is added by the function}
 
-\item{outputDir}{The directory output to which output-files are to be
+\item{outputDir}{The directory to which output-files are to be
 written.}
 
-\item{corType}{type of correlation: Pearson (default) or spearman rank sum
-(to be implemented).}
+\item{corType}{type of correlation: Pearson (default) or spearman rank sum.}
 
-\item{partition}{data.frame with columns E and partition.}
+\item{partition}{\code{data.frame} with columns E and partition. The column
+E should contain the training environments (type character); partition
+should be of type integer. Environments in the same fold should have
+the same integer value. Default is \code{data.frame()}, in which case the
+function uses a leave-one-environment out cross-validation. If \code{NULL},
+the (inner) training sets used for cross-validation will be drawn randomly
+from all observations, ignoring the environment structure. In the latter
+case, the number of folds (nfolds) can be specified.}
 
-\item{alpha}{type of penalty, as in glmnet (1 = LASSO, 0 = ridge; in between
-= elastic net).}
+\item{alpha}{Type of penalty, as in glmnet (1 = LASSO, 0 = ridge; in between
+= elastic net). Default is 1.}
 
 \item{lambda}{Numeric vector; defines the grid over which the penalty lambda
 is optimised in cross validation.
@@ -116,28 +123,33 @@ Important special case: lambda = 0 (no penalty).
 May be better handled with lm rather than glmnet (ask Vahe)}
 
 \item{penE}{numeric; default 0. If 1, environmental main effects are
-penalized. If 0, they are not. Any nonnegative real number is allowed}
+penalized. If 0, they are not. Any non negative real number is allowed.}
 
 \item{scaling}{determines how the environmental variables are scaled.
 "train" : all data (test and training environments) are scaled
 using the mean and and standard deviation in the training environments.
 "all" : using the mean and standard deviation of all environments.
-'no' : No scaling}
+"no" : No scaling.}
 
-\item{postLasso}{boolean.}
+\item{postLasso}{boolean; default \code{FALSE}. Indicates whether to refit
+the model without penalty, using only the variables selected by
+lasso. To do: Require that alpha = 1.}
 
-\item{quadratic}{boolean. If TRUE, quadratic terms (i.e., squared indices) are
-added to the model. Only for those indices that were selected (CLARIFY)}
+\item{quadratic}{boolean; default \code{FALSE}. If \code{TRUE}, quadratic
+terms (i.e., squared indices) are added to the model. Only for those indices
+that were selected (CLARIFY).}
 
-\item{verbose}{boolean. If TRUE, the accuracies per environment are printed on screen}
+\item{verbose}{boolean; default \code{FALSE}. If \code{TRUE}, the accuracies
+per environment are printed on screen.}
 }
 \value{
 A list with the following elements:
 \describe{
-\item{predTrain}{Vector with predictions for the training set (to do: Add the
-factors genotype and environment; make a dataframe)}
-\item{predTest}{Vector with predictions for the test set (to do: Add the factors
-genotype and environment; make a dataframe). To do: add estimated environmental main effects, not only predicted environmental main effects}
+\item{predTrain}{Vector with predictions for the training set
+(to do: Add the factors genotype and environment; make a dataframe)}
+\item{predTest}{Vector with predictions for the test set (to do: Add the
+factors genotype and environment; make a dataframe). To do: add estimated
+environmental main effects, not only predicted environmental main effects}
 }
 }
 \description{

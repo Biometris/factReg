@@ -3,3 +3,4 @@
 .csv
 .pdf
 ^data-raw$
+testScripts

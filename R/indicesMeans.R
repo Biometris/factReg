@@ -6,6 +6,8 @@
 #'
 #' @inheritParams GnE
 #'
+#' @param useY ...
+#'
 #' @return A list with the following elements:
 #' \describe{
 #'   \item{indexMeans}{...}
@@ -13,32 +15,25 @@
 #'
 #' @export
 indicesMeans <- function(dat,
-                Y,
-                G,
-                E,
-                indices,
-                use.Y = FALSE) {
-
+                         Y,
+                         G,
+                         E,
+                         indices,
+                         useY = FALSE) {
   ## Get traitName.
   traitName <- ifelse(is.numeric(Y), names(dat)[Y], Y)
   ## Rename data columns for Y, G and E.
   dat <- renameYGE(dat = dat, Y = Y, G = G, E = E)
-
   dat <- droplevels(dat)
-
   ## Remove missing values
-  if (use.Y) {
+  if (useY) {
     #stopifnot(!is.null(Y))
     dat <- dat[!(is.na(dat$Y)),]
   }
-
   dat <- droplevels(dat)
-
-  indexMeans <- matrix(NA, nlevels(dat$E), length(indices))
-  rownames(indexMeans) <- levels(dat$E)
-  colnames(indexMeans) <- indices
+  indexMeans <- matrix(nrow = nlevels(dat$E), ncol = length(indices),
+                       dimnames = list(levels(dat$E), indices))
   indexMeans <- as.data.frame(indexMeans)
-
   for (ind in indices) {
     for (er in levels(dat$E)) {
       rs <- which(dat$E == er)
@@ -46,6 +41,5 @@ indicesMeans <- function(dat,
       indexMeans[er, ind] <- mu
     }
   }
-
-  return(list(indexMeans = indexMeans))
+  return(indexMeans)
 }

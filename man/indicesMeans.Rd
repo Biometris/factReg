@@ -4,29 +4,32 @@
 \alias{indicesMeans}
 \title{compute means of indices}
 \usage{
-indicesMeans(dat, Y, G, E, indices, use.Y = FALSE)
+indicesMeans(dat, Y, G, E, indices, useY = FALSE)
 }
 \arguments{
-\item{dat}{A data-frame with data from multi-environment trials.
+\item{dat}{A \code{data.frame} with data from multi-environment trials.
 Each row corresponds to a particular genotype in a particular environment.
 The data do not need to be balanced, i.e. an environment does not need to
-contain all genotypes. dat should contain the training as well as the test
-environments (see testEnv)}
+contain all genotypes. \code{dat} should contain the training as well as the
+test environments (see testEnv)}
 
 \item{Y}{The trait to be analyzed: either of type character, in which case
-it should be one of the column names in dat, or numeric, in which case the Yth
-column of dat will be analyzed.}
+it should be one of the column names in \code{dat}, or numeric, in which
+case the Yth column of \code{dat} will be analyzed.}
 
-\item{G}{The column in dat containing the factor genotype (either character or
-numeric).}
+\item{G}{The column in \code{dat} containing the factor genotype (either
+character or numeric).}
 
-\item{E}{The column in dat containing the factor environment (either character
-or numeric).}
+\item{E}{The column in \code{dat} containing the factor environment
+(either character or numeric).}
 
-\item{indices}{The columns in dat containing the environmental indices (vector
-of type character). Alternatively, if the indices are always constant within
-environments (i.e. not genotype dependent), the environmental data can also
-be provided using the argument indicesData (see below).}
+\item{indices}{The columns in \code{dat} containing the environmental
+indices (vector of type character). Alternatively, if the indices are always
+constant within environments (i.e. not genotype dependent), the
+environmental data can also be provided using the argument \code{indicesData}
+(see below).}
+
+\item{useY}{...}
 }
 \value{
 A list with the following elements:
