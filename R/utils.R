@@ -49,3 +49,78 @@ exRank <- function(y0,
   return(length(intersect(topK, topM)) / k)
 }
 
+#' Helper function
+#'
+#' Helper function for ....
+#'
+#' @noRd
+#' @keywords internal
+corFun <- function(x,
+                   y,
+                   corType) {
+  cor(x, y, use = "na.or.complete", method = corType)
+}
+
+
+#' Helper function
+#'
+#' Helper function for ....
+#'
+#' @noRd
+#' @keywords internal
+getAccuracyEnv <- function(datNew,
+                           datPred,
+                           datPredMain,
+                           datE,
+                           corType,
+                           rank = FALSE) {
+  ## Split data by environments.
+  sNew <- split(datNew, datE)
+  sPred <- split(datPred, datE)
+  sPredMain <- split(datPredMain, datE)
+  ## Define helper functions.
+  RMSEFun <- function(x, y) {
+    sqrt(mean((x - y) ^ 2))
+  }
+  MADFun <- function(x, y) {
+    mean(abs(x - y))
+  }
+  ## Compute statistics for test data.
+  accuracy <- data.frame(Env = levels(datE),
+                         r = mapply(FUN = corFun, sNew, sPred,
+                                    MoreArgs = list(corType = corType)),
+                         rMain = mapply(FUN = corFun, sNew, sPredMain,
+                                        MoreArgs = list(corType = corType)),
+                         RMSE = mapply(FUN = RMSEFun, sNew, sPred),
+                         RMSEMain = mapply(FUN = RMSEFun, sNew, sPredMain),
+                         MAD = mapply(FUN = MADFun, sNew, sPred),
+                         row.names = NULL)
+  ## Add rank.
+  if (rank) {
+    rankDat <- data.frame(
+      rank = mapply(FUN = exRank, sNew, sPred),
+      rankMain = mapply(FUN = exRank, sNew, sPredMain),
+      row.names = NULL)
+    accuracy <- cbind(accuracy, rankDat)
+  }
+  return(accuracy)
+}
+
+#' Helper function
+#'
+#' Helper function for ....
+#'
+#' @noRd
+#' @keywords internal
+getAccuracyGeno <- function(datNew,
+                            datPred,
+                            datG,
+                            corType) {
+  ## Split data by genotypes
+  sNew <- split(datNew, datG)
+  sPred <- split(datPred, datG)
+  accuracy <- data.frame(Geno = levels(datG),
+                         r = mapply(FUN = corFun, sNew, sPred,
+                                    MoreArgs = list(corType = corType)))
+  return(accuracy)
+}

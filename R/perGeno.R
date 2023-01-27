@@ -365,60 +365,33 @@ perGeno <- function(dat,
       dTest <- droplevels(dTest)
     }
   }
-  ## Split raw data and predictions by environment for computing statistics.
-  s1 <- split(dTrain$Y, dTrain$E)
-  s2 <- split(predTrain, dTrain$E)
-  s1G <- split(dTrain$Y, dTrain$G)
-  s2G <- split(predTrain, dTrain$G)
-  s3 <- split(mainOnly[as.character(dTrain$G)], dTrain$E)
   ## Compute statistics for training data.
-  trainAccuracyEnv <-
-    data.frame(Env = levels(dTrain$E),
-               r = mapply(FUN = cor, s1, s2,
-                          MoreArgs = list(use = "na.or.complete",
-                                          method = corType)),
-               rMain = mapply(FUN = cor, s1, s3,
-                              MoreArgs = list(use = "na.or.complete",
-                                              method = corType)),
-               RMSE = mapply(FUN = function(x, y) {
-                 sqrt(mean((x - y) ^ 2, na.rm = TRUE))
-               }, s1, s2),
-               MAD = mapply(FUN = function(x, y) {
-                 mean(abs(x - y), na.rm = TRUE)
-               }, s1, s2), row.names = NULL)
-  trainAccuracyGeno <-
-    data.frame(Geno = levels(dTrain$G),
-               r = mapply(FUN = cor, s1G, s2G,
-                          MoreArgs = list(use = "na.or.complete",
-                                          method = corType)))
+  predMain <- mainOnly[as.character(dTrain$G)]
+  trainAccuracyEnv <- getAccuracyEnv(datNew = dTrain[, "Y"],
+                                     datPred = predTrain,
+                                     datPredMain = predMain,
+                                     datE = dTrain[, "E"],
+                                     corType = corType,
+                                     rank = TRUE)
+  ## Compute accuracies for genotypes.
+  trainAccuracyGeno <- getAccuracyGeno(datNew = dTrain[, "Y"],
+                                       datPred = predTrain,
+                                       datG = dTrain[, "G"],
+                                       corType = corType)
   if (!is.null(testEnv)) {
-    ## Split raw data and predictions by environment for computing statistics.
-    s1t <- split(dTest$Y, dTest$E)
-    s2t <- split(predTest, dTest$E)
-    s1tG <- split(dTest$Y, dTest$G)
-    s2tG <- split(predTest, dTest$G)
-    s3t <- split(mainOnly[as.character(dTest$G)], dTest$E)
     ## Compute statistics for test data.
-    testAccuracyEnv <-
-      data.frame(Env = levels(dTest$E),
-                 r = mapply(FUN = cor, s1t, s2t,
-                            MoreArgs = list(use = "na.or.complete",
-                                            method = corType)),
-                 rMain = mapply(FUN = cor, s1t, s3t,
-                                MoreArgs = list(use = "na.or.complete",
-                                                method = corType)),
-                 RMSE = mapply(FUN = function(x, y) {
-                   sqrt(mean((x - y) ^ 2, na.rm = TRUE))
-                 }, s1t, s2t),
-                 MAD = mapply(FUN = function(x, y) {
-                   mean(abs(x - y), na.rm = TRUE)
-                 }, s1t, s2t), row.names = NULL)
-    testAccuracyGeno <-
-      data.frame(Geno = levels(dTest$G),
-                 r = mapply(FUN = cor, s1tG, s2tG,
-                            MoreArgs = list(use = "na.or.complete",
-                                            method = corType)))
-
+    predMainTest <- mainOnly[as.character(dTest$G)]
+    testAccuracyEnv <- getAccuracyEnv(datNew = dTest[, "Y"],
+                                      datPred = predTest,
+                                      datPredMain = predMainTest,
+                                      datE = dTest[, "E"],
+                                      corType = corType,
+                                      rank = TRUE)
+    ## Compute accuracies for genotypes.
+    testAccuracyGeno <- getAccuracyGeno(datNew = dTest[, "Y"],
+                                        datPred = predTest,
+                                        datG = dTest[, "G"],
+                                        corType = corType)
   } else {
     testAccuracyEnv  <- NULL
     testAccuracyGeno <- NULL

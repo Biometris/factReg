@@ -70,27 +70,12 @@ nGnE <- function(GnEOut,
     predNew$pred <- predNew$pred +
       as.numeric(parGenoAll[dNew[, G], j]) * dNew[, indices[j - 1]]
   }
-  # s1t <- split(dNew$Y, dNew$E)
-  # s2t <- split(predNew, dNew$E)
-  # s3t <- split(mainOnly[as.character(dNew$G)], dNew$E)
-  s1t <- split(dNew[, Y], dNew[, E])
-  s2t <- split(predNew$pred, dNew[, E])
-  s3t <- split(predNew$predMain, dNew[, E])
   ## Compute statistics for test data.
-  testAccuracyEnv <-
-    data.frame(Env = levels(dNew$E),
-               r = mapply(FUN = cor, s1t, s2t,
-                          MoreArgs = list(use = "na.or.complete",
-                                          method = corType)),
-               rMain = mapply(FUN = cor, s1t, s3t,
-                              MoreArgs = list(use = "na.or.complete",
-                                              method = corType)),
-               RMSE = mapply(FUN = function(x, y) {
-                 sqrt(mean((x - y) ^ 2))
-               }, s1t, s2t),
-               MAD = mapply(FUN = function(x, y) {
-                 mean(abs(x - y))
-               }, s1t, s2t), row.names = NULL)
+  testAccuracyEnv <- getAccuracyEnv(datNew = dNew[, Y],
+                                    datPred = predNew[["pred"]],
+                                    datPredMain = predNew[["predMain"]],
+                                    datE = dNew[, E],
+                                    corType = corType)
   return(list(parGenoAll = parGenoAll,
               predNew = predNew,
               testAccuracyEnv = testAccuracyEnv))

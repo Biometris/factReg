@@ -152,14 +152,14 @@ environments, obtained from penalized regression using the estimated
 main effects for the training environments and the averaged indices.}
 \item{parGeno}{dataframe containing the estimated genotypic main effects
 (first column) and sensitivities (subsequent columns)}
-\item{main.par}{If the option mainCovariates is used, this vector contains
+\item{mainPar}{If the option mainCovariates is used, this vector contains
 estimates of the main effects of the indices specified in mainCovariates.}
 \item{trainAccuracyEnv}{a data-frame with the accuracy (r) for each
 training environment, as well as the root mean squre error (RMSE), mean
 abosolute deviation (MAD) and rank (the latter is a proportion: how many
 of the best 5 genotypes are in the top 10). To be removed or further
 developed. All these quantities are also evaluated for a model with only
-genotypic and environmental main effects (columns rMain, RMSEmain and
+genotypic and environmental main effects (columns rMain, RMSEMain and
 rankMain).}
 \item{testAccuracyEnv}{A data-frame with the accuracy for each test
 environment, with the same columns as trainAccuracyEnv.}

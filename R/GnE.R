@@ -137,7 +137,7 @@
 #'   abosolute deviation (MAD) and rank (the latter is a proportion: how many
 #'   of the best 5 genotypes are in the top 10). To be removed or further
 #'   developed. All these quantities are also evaluated for a model with only
-#'   genotypic and environmental main effects (columns rMain, RMSEmain and
+#'   genotypic and environmental main effects (columns rMain, RMSEMain and
 #'   rankMain).}
 #'   \item{testAccuracyEnv}{A data-frame with the accuracy for each test
 #'   environment, with the same columns as trainAccuracyEnv.}
@@ -534,73 +534,29 @@ GnE <- function(dat,
       dTest <- droplevels(dTest)
     }
   }
-  ## Split raw data and predictions by environment for computing statistics.
-  s1 <- split(dTrain$Y, dTrain$E)
-  s2 <- split(predTrain, dTrain$E)
-  s1G <- split(dTrain$Y, dTrain$G)
-  s2G <- split(predTrain, dTrain$G)
-  fm <- indFrameTrain$envMainFitted
-  names(fm) <- as.character(indFrameTrain$E)
-  #s3 <- split(as.numeric(mainOnly[as.character(dTrain$G)]) + as.numeric(fm[as.character(dTrain$E)]), dTrain$E)
-  s3 <- split(as.numeric(predict(modelMain, newx = mm)), dTrain$E)
-  #s3 <- split(as.numeric(mainOnly[as.character(dTrain$G)]) + as.numeric(envMain[dTrain$E,1]), dTrain$E)
-  #  + fm[as.character(dTrain$E)] ??
-  # plot(cfe[1:25], cf[1:25])
   ## Compute statistics for training data.
-  trainAccuracyEnv <-
-    data.frame(Env = levels(dTrain$E),
-               r = mapply(FUN = cor, s1, s2,
-                          MoreArgs = list(use = "na.or.complete",
-                                          method = corType)),
-               rMain = mapply(FUN = cor, s1, s3,
-                              MoreArgs = list(use = "na.or.complete",
-                                              method = corType)),
-               RMSE = mapply(FUN = function(x, y) {
-                 sqrt(mean((x - y) ^ 2, na.rm = TRUE))
-                 }, s1, s2),
-               RMSEmain = mapply(FUN = function(x, y) {
-                 sqrt(mean((x - y) ^ 2, na.rm = TRUE))
-                 }, s1, s3),
-               MAD = mapply(FUN = function(x, y) {
-                 mean(abs(x - y), na.rm = TRUE)
-                 }, s1, s2),
-               rank = mapply(FUN = exRank, s1, s2),
-               rankMain = mapply(FUN = exRank, s1, s3),
-               row.names = NULL)
-  trainAccuracyGeno <-
-    data.frame(Geno = levels(dTrain$G),
-               r = mapply(FUN = cor, s1G, s2G,
-                          MoreArgs = list(use = "na.or.complete",
-                                          method = corType)))
+  predMain <- as.numeric(predict(modelMain, newx = mm))
+  trainAccuracyEnv <- getAccuracyEnv(datNew = dTrain[, "Y"],
+                                     datPred = predTrain,
+                                     datPredMain = predMain,
+                                     datE = dTrain[, "E"],
+                                     corType = corType,
+                                     rank = TRUE)
+  ## Compute accuracies for genotypes.
+  trainAccuracyGeno <- getAccuracyGeno(datNew = dTrain[, "Y"],
+                                       datPred = predTrain,
+                                       datG = dTrain[, "G"],
+                                       corType = corType)
   if (!is.null(testEnv)) {
-    ## Split raw data and predictions by environment for computing statistics.
-    s1t <- split(dTest$Y, dTest$E)
-    s2t <- split(predTest, dTest$E)
-    s1tG <- split(dTest$Y, dTest$G)
-    s2tG <- split(predTest, dTest$G)
-    s3t <- split(mainOnly[as.character(dTest$G)] +
-                   as.numeric(parEnvTest2[as.character(dTest$E), ]), dTest$E)
     ## Compute statistics for test data.
-    testAccuracyEnv <-
-      data.frame(Env = levels(dTest$E),
-                 r = mapply(FUN = cor, s1t, s2t,
-                            MoreArgs = list(use = "na.or.complete",
-                                            method = corType)),
-                 rMain = mapply(FUN = cor, s1t, s3t,
-                                MoreArgs = list(use = "na.or.complete",
-                                                method = corType)),
-                 RMSE = mapply(FUN = function(x, y) {
-                   sqrt(mean((x - y) ^ 2, na.rm = TRUE))
-                   }, s1t, s2t),
-                 RMSEmain = mapply(FUN = function(x, y) {
-                   sqrt(mean((x - y) ^ 2, na.rm = TRUE))
-                   }, s1t, s3t),
-                 MAD = mapply(FUN = function(x, y) {
-                   mean(abs(x - y), na.rm = TRUE)
-                   }, s1t, s2t),
-                 rank = mapply(FUN = exRank, s1t, s2t),
-                 rankMain = mapply(FUN = exRank, s1t, s3t),
-                 row.names = NULL)
+    predMainTest <- mainOnly[as.character(dTest$G)] +
+      as.numeric(parEnvTest2[as.character(dTest$E), ])
+    testAccuracyEnv <- getAccuracyEnv(datNew = dTest[, "Y"],
+                                      datPred = predTest,
+                                      datPredMain = predMainTest,
+                                      datE = dTest[, "E"],
+                                      corType = corType,
+                                      rank = TRUE)
     ##################
     if (is.null(partition)) {
       glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
@@ -615,12 +571,11 @@ GnE <- function(dat,
                       newx = as.matrix(indFrameTest[, indices]),
                       s = "lambda.min")
     testAccuracyEnv$rEst <- as.numeric(rTest)
-    ##################
-    testAccuracyGeno <-
-      data.frame(Geno = levels(dTest$G),
-                 r = mapply(FUN = cor, s1tG, s2tG,
-                            MoreArgs = list(use = "na.or.complete",
-                                            method = corType)))
+    ## Compute accuracies for genotypes.
+    testAccuracyGeno <- getAccuracyGeno(datNew = dTest[, "Y"],
+                                        datPred = predTest,
+                                        datG = dTest[, "G"],
+                                        corType = corType)
   } else {
     testAccuracyEnv  <- NULL
     testAccuracyGeno <- NULL
