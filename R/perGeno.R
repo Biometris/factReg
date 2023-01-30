@@ -238,7 +238,6 @@ perGeno <- function(dat,
   sdTr <- muTr <- rep(NA, ncol(m))
   names(sdTr) <- names(muTr) <- colnames(m)
   nIndices <- length(indices)
-
   ## Create a data.frame that will contain the estimated genotypic
   ## main effects (first column), and the estimated environmental
   ## sensitivities (subsequent) columns.

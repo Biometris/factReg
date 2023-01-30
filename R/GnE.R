@@ -231,9 +231,9 @@ GnE <- function(dat,
   }
 
   if (is.null(weight)) {
-    dat$W <- rep(1, nrow(dat))
+    dat$W <- 1
   } else {
-    stopifnot(length(weight)==nrow(dat))
+    stopifnot(length(weight) == nrow(dat))
     dat$W <- weight
   }
   ## Split dat into training and test set.
@@ -246,7 +246,6 @@ GnE <- function(dat,
     dTrain <- dTrain[!(dTrain$G %in% redundantGeno), ]
   }
   dTrain <- droplevels(dTrain)
-
   if (!is.null(testEnv)) {
     dTest <- dat[dat$E %in% testEnv, ]
     dTest <- droplevels(dTest)
@@ -441,7 +440,8 @@ GnE <- function(dat,
   rownames(parGeno) <- parGeno[["Row.names"]]
   parGeno <- parGeno[, c("main", indices)]
   ## Make predictions for training set.
-  predTrain <- as.numeric(predict(object = glmnetOutA, newx = ma[1:nrow(dTrain), ],
+  predTrain <- as.numeric(predict(object = glmnetOutA,
+                                  newx = ma[1:nrow(dTrain), ],
                                   s = "lambda.min"))
   resTrain <- dTrain$Y - predTrain
   if (!is.null(testEnv)) {

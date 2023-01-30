@@ -55,10 +55,10 @@ frBLUP <- function(dat,
                    mainCovariates = NULL,
                    mainCovPen = 1,
                    K,
-                   method = c('factReg', 'perGeno'),
+                   method = c("factReg", "perGeno"),
                    testEnv = NULL,
                    type = NULL,
-                   target = c('generic','nGnE', 'GnE'),
+                   target = c("generic", "nGnE", "GnE"),
                    genPred = NULL,
                    gpWeight = NULL,
                    useRes = 2,
@@ -73,9 +73,7 @@ frBLUP <- function(dat,
                    postLasso = FALSE,
                    quadratic = FALSE,
                    verbose = FALSE) {
-
   ###############
-
   scaling <- match.arg(scaling)
   corType <- match.arg(corType)
   method  <- match.arg(method)
