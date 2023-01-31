@@ -2,7 +2,7 @@
 % Please edit documentation in R/indicesMeans.R
 \name{indicesMeans}
 \alias{indicesMeans}
-\title{compute means of indices}
+\title{Compute means of environmental covariates or indices}
 \usage{
 indicesMeans(dat, Y, G, E, indices, useY = FALSE)
 }
@@ -29,14 +29,20 @@ constant within environments (i.e. not genotype dependent), the
 environmental data can also be provided using the argument \code{indicesData}
 (see below).}
 
-\item{useY}{...}
+\item{useY}{If set to TRUE, all rows for which the trait of interest has a
+missing value are removed}
 }
 \value{
 A list with the following elements:
 \describe{
-\item{indexMeans}{...}
+\item{indexMeans}{A data-frame with means per environment
+(environments in the rows; environmental variables in the columns)}
 }
 }
 \description{
-compute means of indices
+Given a data-frame in long format with columns genotype, environment, and a
+number of environmental variables, compute the mean for each of these variables
+in each environment. This is useful when environmental variables have
+genotype-specific values within environments. This occurs especially if
+environmental variables are corrected for developmental timing.
 }
