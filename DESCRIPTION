@@ -22,11 +22,9 @@ License: GPL
 Depends: 
     R (>= 3.6)
 Imports: 
-    gaston,
     glmnet,
     mathjaxr,
     Matrix,
-    rrBLUP,
     stats
 Encoding: UTF-8
 LazyData: true
