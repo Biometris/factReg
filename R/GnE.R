@@ -362,7 +362,7 @@ GnE <- function(dat,
       mainPar <- NULL
     }
   } else {
-    glmnetOutA <- glmnet::cv.glmnet(x = ma[1:nrow(dTrain),], y = dTrain$Y,
+    glmnetOutA <- glmnet::cv.glmnet(x = ma[1:nrow(dTrain), ], y = dTrain$Y,
                                     lambda = lambda,
                                     weights = dTrain$W,
                                     foldid = foldid, nfolds = nfolds,
@@ -494,11 +494,13 @@ GnE <- function(dat,
     glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
                                    y = indFrameTrain$envMainFitted,
                                    alpha = alpha,
-                                   foldid = indFrameTrain$partition)
+                                   foldid = indFrameTrain$partition,
+                                   grouped = max(table(indFrameTrain$partition)) > 2)
     glmnetOut2 <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain2[, indices]),
                                     y = indFrameTrain2$envMainFitted,
                                     alpha = alpha,
-                                    foldid = indFrameTrain2$partition)
+                                    foldid = indFrameTrain2$partition,
+                                    grouped = max(table(indFrameTrain2$partition)) > 2)
   }
   # names(which(glmnetOut$glmnet.fit$beta[,which(glmnetOut$lambda == glmnetOut$lambda.min)]>0))
   parEnvTrain <- predict(object = glmnetOut,
@@ -565,7 +567,8 @@ GnE <- function(dat,
     } else {
       glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
                                      y = trainAccuracyEnv$r, alpha = alpha,
-                                     foldid = indFrameTrain$partition)
+                                     foldid = indFrameTrain$partition,
+                                     grouped = max(table(indFrameTrain$partition)) > 2)
     }
     rTest  <- predict(object = glmnetOut,
                       newx = as.matrix(indFrameTest[, indices]),
