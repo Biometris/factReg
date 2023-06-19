@@ -367,7 +367,7 @@ GnE <- function(dat,
   ## Create a data.frame that will contain the estimated genotypic
   ## main effects (first column), and the estimated environmental
   ## sensitivities (subsequent) columns.
-  tempInd2 <- setdiff((nEnvTrain + nEnvTest + nGenoTrain):ncol(ma), tempInd)
+  tempInd2 <- (nEnvTrain + nEnvTest + nGenoTrain):ncol(ma)
   ## assign the genotypic main effects
   parGeno <-
     data.frame(main = c(0, cfe[(nEnvTrain + nEnvTest + 1):
