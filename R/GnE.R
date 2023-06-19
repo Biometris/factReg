@@ -229,7 +229,6 @@ GnE <- function(dat,
   } else if (scaling == "all") {
     dat[, indices] <- scale(dat[, indices])
   }
-
   if (is.null(weight)) {
     dat$W <- 1
   } else {
@@ -275,16 +274,11 @@ GnE <- function(dat,
     foldid <- NULL
     if (is.null(nfolds)) {nfolds <- 10}
   }
-  # just to het the names ...
-  w2 <- aggregate(x = dTrain$Y, by = list(dTrain$G),
-                  FUN = mean, na.rm = TRUE)
-  e3 <- aggregate(x = dTrain$Y, by = list(dTrain$E),
-                  FUN = mean, na.rm = TRUE)
   mm <- Matrix::sparse.model.matrix(Y ~ E + G, data = dTrain)
   modelMain <- glmnet::glmnet(y = dTrain$Y, x = mm, thresh = 1e-18, lambda = 0)
   cf <- c(modelMain$a0, modelMain$beta[-1])
-  names(cf) <- c("(Intercept)", paste0('E', e3$Group.1[-1]),
-                 paste0('G', w2$Group.1[-1]))
+  names(cf) <- c("(Intercept)", paste0("E", levels(dTrain$E)[-1]),
+                 paste0("G", levels(dTrain$G)[-1]))
   mainOnly <- rep(0, nGenoTrain)
   names(mainOnly) <- levels(dTrain$G)
   mainTemp <- cf[(nEnvTrain + 1):(nEnvTrain + nGenoTrain - 1)]

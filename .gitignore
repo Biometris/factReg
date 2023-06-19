@@ -5,3 +5,5 @@
 .Ruserdata
 testScripts
 *.txt
+results_glmnet_perEnv_Test.csv
+results_glmnet_perEnv_Train.csv
