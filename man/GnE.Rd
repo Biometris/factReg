@@ -207,8 +207,6 @@ of the indices in these environments, as in Millet et al 2019.
 ## load the data, which are contained in the package
 data(drops_GE)
 data(drops_GnE)
-data(drops_nGnE)
-data(drops_K)
 
 ## We remove identifiers that we don't need.
 drops_GE_GnE <- rbind(drops_GE[, -c(2, 3, 5)], drops_GnE[, -c(2, 3, 5)])

@@ -156,8 +156,6 @@
 #' ## load the data, which are contained in the package
 #' data(drops_GE)
 #' data(drops_GnE)
-#' data(drops_nGnE)
-#' data(drops_K)
 #'
 #' ## We remove identifiers that we don't need.
 #' drops_GE_GnE <- rbind(drops_GE[, -c(2, 3, 5)], drops_GnE[, -c(2, 3, 5)])
@@ -222,6 +220,14 @@ GnE <- function(dat,
                 postLasso = FALSE,
                 quadratic = FALSE,
                 verbose = FALSE) {
+  ## Input checks.
+  if (!inherits(dat, "data.frame")) {
+    stop("dat should be a data.frame.\n")
+  }
+  ## Get traitName.
+  traitName <- if (is.numeric(Y)) names(dat)[Y] else Y
+  ## Rename data columns for Y, G and E. - this includes checks.
+  dat <- renameYGE(dat = dat, Y = Y, G = G, E = E)
   stopifnot(penG >= 0) # also > 1 is possible!
   stopifnot(penE >= 0)
   scaling <- match.arg(scaling)
@@ -232,10 +238,20 @@ GnE <- function(dat,
     lambdaProvided <- TRUE
     lambda <- sort(lambda, decreasing = TRUE)
   }
-  ## Get traitName.
-  traitName <- if (is.numeric(Y)) names(dat)[Y] else Y
-  ## Rename data columns for Y, G and E.
-  dat <- renameYGE(dat = dat, Y = Y, G = G, E = E)
+  ## Either indices or indicesData should be provided.
+  if ((is.null(indices) && is.null(indicesData)) ||
+      (!is.null(indices) && !is.null(indicesData))) {
+    stop("Either indices or indicesData should be provided.\n")
+  }
+  if (!is.null(indices) && (!is.character(indices)) ||
+      !all(hasName(x = dat, name = indices))) {
+    stop("indices should be a vector of columns in dat.\n")
+  }
+  if (!is.null(indicesData) && (!inherits(indicesData, "data.frame") ||
+    !all(levels(dat$E) %in% rownames(indicesData)))) {
+    stop("indicesData should be a data.frame with all environments in its ",
+         "rownames.\n")
+  }
   ## Check kinship.
   if (!is.null(K)) {
     stopifnot(all(dat$genotypes %in% colnames(K)))
@@ -248,7 +264,6 @@ GnE <- function(dat,
   if (!is.null(indicesData)) {
     indices <- colnames(indicesData)
     nIndices <- ncol(indicesData)
-    stopifnot(all(levels(dat$E) %in% rownames(indicesData)))
     dat <- dat[, setdiff(names(dat), indices)]
     qw <- matrix(NA, nrow(dat), nIndices)
     colnames(qw) <- indices

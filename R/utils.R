@@ -2,6 +2,7 @@
 #'
 #' Helper function for renaming columns Y, G and Y in dat
 #'
+#' @importFrom utils hasName
 #' @noRd
 #' @keywords internal
 renameYGE <- function(dat,
@@ -14,7 +15,9 @@ renameYGE <- function(dat,
     if (is.numeric(varVal)) {
       names(dat)[varVal] <- var
     } else if (is.character(varVal)) {
-      stopifnot(varVal %in% names(dat))
+      if (!hasName(x = dat, varVal)) {
+        stop(varVal, " should be a column in dat.\n")
+      }
       names(dat)[names(dat) == varVal] <- var
     }
   }
