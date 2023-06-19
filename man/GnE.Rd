@@ -9,6 +9,7 @@ GnE(
   Y,
   G,
   E,
+  K = NULL,
   indices = NULL,
   indicesData = NULL,
   mainCovariates = NULL,
@@ -47,6 +48,8 @@ character or numeric).}
 
 \item{E}{The column in \code{dat} containing the factor environment
 (either character or numeric).}
+
+\item{K}{A kinship matrix. ...........}
 
 \item{indices}{The columns in \code{dat} containing the environmental
 indices (vector of type character). Alternatively, if the indices are always

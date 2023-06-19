@@ -46,6 +46,7 @@
 #' character or numeric).
 #' @param E The column in \code{dat} containing the factor environment
 #' (either character or numeric).
+#' @param K A kinship matrix. ...........
 #' @param indices The columns in \code{dat} containing the environmental
 #' indices (vector of type character). Alternatively, if the indices are always
 #' constant within environments (i.e. not genotype dependent), the
@@ -166,6 +167,7 @@ GnE <- function(dat,
                 Y,
                 G,
                 E,
+                K = NULL,
                 indices = NULL,
                 indicesData = NULL,
                 mainCovariates = NULL,
@@ -205,7 +207,6 @@ GnE <- function(dat,
   ## Remove missing values from training envs.
   dat <- dat[!(is.na(dat$Y) & dat$E %in% trainEnv),]
   dat <- droplevels(dat)
-  ##################
   if (!is.null(indicesData)) {
     indices <- colnames(indicesData)
     nIndices <- ncol(indicesData)
@@ -220,7 +221,6 @@ GnE <- function(dat,
       }
     }
   }
-  ###################
   ## Scale environmental variables.
   if (scaling == "train") {
     muTr <- colMeans(dat[dat$E %in% trainEnv, indices])
@@ -320,7 +320,6 @@ GnE <- function(dat,
     if (quadratic) {
       tempInd <- c((ncolMaOld + 1):(ncolMaOld + length(mainCovariates)),
                    (ncol(ma) - length(mainCovariates) + 1):ncol(ma))
-      #(ncol(ma) - 2 * length(mainCovariates) + 1):ncol(ma)
     } else {
       tempInd <- (ncol(ma) - length(mainCovariates) + 1):ncol(ma)
     }
@@ -419,9 +418,6 @@ GnE <- function(dat,
   cfeIndices <- sapply(X = cfeIndRows, FUN = function(cfeIndRow) {
     strsplit(x = cfeIndRow, split = ":")[[1]][2]
   })
-  # cfeDf <- data.frame(geno = cfeGenotypes, index = cfeIndices,
-  #                     val = cfe[(nGenoTrain + nEnvTrain + nEnvTest):(nrow(cfe) - length(mainCovariates)), lambdaIndex],
-  #                     stringsAsFactors = FALSE)
   cfeDf <- data.frame(geno = cfeGenotypes, index = cfeIndices,
                       val = cfe[tempInd2, lambdaIndex],
                       stringsAsFactors = FALSE)
@@ -433,6 +429,20 @@ GnE <- function(dat,
   parGeno <- merge(parGeno, parGenoIndices, by.x = "row.names", by.y = "geno")
   rownames(parGeno) <- parGeno[["Row.names"]]
   parGeno <- parGeno[, c("main", indices)]
+
+
+  ## If kinship provided replace by kinship predictions.
+  if (!is.null(K)) {
+    parGenoDat <- parGeno
+    parGenoDat$G <- factor(rownames(parGenoDat))
+    K <- K[parGenoDat$G, parGenoDat$G]
+    for (j in 1:(length(indices) + 1)) {
+      kinPred <- rrBLUP::kin.blup(data = parGenoDat, geno = "G",
+                                  pheno = names(parGenoDat)[j], K = K)
+      parGeno[names((kinPred$pred)), j] <- as.numeric(kinPred$pred)
+    }
+  }
+
   ## Make predictions for training set.
   predTrain <- as.numeric(predict(object = glmnetOutA,
                                   newx = ma[1:nrow(dTrain), ],
