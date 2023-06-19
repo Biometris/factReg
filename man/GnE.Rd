@@ -26,7 +26,6 @@ GnE(
   scaling = c("train", "all", "no"),
   postLasso = FALSE,
   quadratic = FALSE,
-  genoAcc = NULL,
   verbose = FALSE
 )
 }
@@ -120,9 +119,6 @@ lasso. To do: Require that alpha = 1.}
 \item{quadratic}{boolean; default \code{FALSE}. If \code{TRUE}, quadratic
 terms (i.e., squared indices) are added to the model. Only for those indices
 that were selected (CLARIFY).}
-
-\item{genoAcc}{character. The accuracies per environment are evaluated
-using these genotypes. It must be a subset of the genotypes in \code{dat}}
 
 \item{verbose}{boolean; default \code{FALSE}. If \code{TRUE}, the accuracies
 per environment are printed on screen.}

@@ -9,6 +9,8 @@
 #'
 #' @inheritParams GnE
 #'
+#' @param genoAcc character. The accuracies per environment are evaluated
+#' using these genotypes. It must be a subset of the genotypes in \code{dat}
 #' @param useRes Indicates whether the genotype-specific regressions are to be
 #' fitted on the residuals of a model with main effects. 0 means no
 #' (i.e. fit the regressions on the original data). 1:

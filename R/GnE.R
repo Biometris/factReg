@@ -103,8 +103,6 @@
 #' @param quadratic boolean; default \code{FALSE}. If \code{TRUE}, quadratic
 #' terms (i.e., squared indices) are added to the model. Only for those indices
 #' that were selected (CLARIFY).
-#' @param genoAcc character. The accuracies per environment are evaluated
-#' using these genotypes. It must be a subset of the genotypes in \code{dat}
 #' @param verbose boolean; default \code{FALSE}. If \code{TRUE}, the accuracies
 #' per environment are printed on screen.
 #'
@@ -177,7 +175,6 @@ GnE <- function(dat,
                 scaling = c("train", "all", "no"),
                 postLasso = FALSE,
                 quadratic = FALSE,
-                genoAcc = NULL,
                 verbose = FALSE) {
   stopifnot(penG >= 0) # also > 1 is possible!
   stopifnot(penE >= 0)
@@ -496,16 +493,6 @@ GnE <- function(dat,
   }
   indicesTrain <- data.frame(indFrameTrain,
                              envMainPred = as.numeric(parEnvTrain))
-  if (!is.null(genoAcc)) {
-    predTrain <- predTrain[which(dTrain$G %in% genoAcc)]
-    dTrain <- dTrain[dTrain$G %in% genoAcc, ]
-    dTrain <- droplevels(dTrain)
-    if (!is.null(testEnv)) {
-      predTest <- predTest[which(dTest$G %in% genoAcc)]
-      dTest <- dTest[dTest$G %in% genoAcc, ]
-      dTest <- droplevels(dTest)
-    }
-  }
   ## Compute statistics for training data.
   predMain <- as.numeric(predict(modelMain, newx = mm))
   trainAccuracyEnv <- getAccuracyEnv(datNew = dTrain[, "Y"],
