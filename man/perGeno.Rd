@@ -73,12 +73,11 @@ residuals of a model with environmental main effects. 2 (default): genotypic and
 environmental main effects.}
 
 \item{outputFile}{The file name of the output files, without .csv extension,
-which is added by the function}
+which is added by the function.}
 
-\item{outputDir}{The directory to which output-files are to be
-written.}
+\item{outputDir}{The directory to which output-files are to be written.}
 
-\item{corType}{type of correlation: Pearson (default) or spearman rank sum.}
+\item{corType}{type of correlation: Pearson (default) or Spearman rank sum.}
 
 \item{partition}{\code{data.frame} with columns E and partition. The column
 E should contain the training environments (type character); partition

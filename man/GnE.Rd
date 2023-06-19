@@ -72,12 +72,11 @@ weight (inverse variance) of each observation, used in glmnet. Default
 \code{NULL}, giving constant weights.}
 
 \item{outputFile}{The file name of the output files, without .csv extension,
-which is added by the function}
+which is added by the function.}
 
-\item{outputDir}{The directory to which output-files are to be
-written.}
+\item{outputDir}{The directory to which output-files are to be written.}
 
-\item{corType}{type of correlation: Pearson (default) or spearman rank sum.}
+\item{corType}{type of correlation: Pearson (default) or Spearman rank sum.}
 
 \item{partition}{\code{data.frame} with columns E and partition. The column
 E should contain the training environments (type character); partition
@@ -203,4 +202,52 @@ estimated genotypic main effects and sensitivities; next, predicted environmenta
 main effects are added. The latter are obtained by regressing the estimated
 environmental main effects for the training environment on the average values
 of the indices in these environments, as in Millet et al 2019.
+}
+\examples{
+## load the data, which are contained in the package
+data(drops_GE)
+data(drops_GnE)
+data(drops_nGnE)
+data(drops_K)
+
+## We remove identifiers that we don't need.
+drops_GE_GnE <- rbind(drops_GE[, -c(2, 3, 5)], drops_GnE[, -c(2, 3, 5)])
+
+## Define indeces.
+ind <- colnames(drops_GE)[6:16]
+
+## Define test environments.
+testenv <- levels(drops_GnE$Experiment)
+
+## Additive model, only main effects (set the penalty parameter to a large value).
+Additive_model <- GnE(drops_GE_GnE, Y = "grain.yield", lambda = 100000,
+                      G = "Variety_ID", E = "Experiment", testEnv = testenv,
+                      indices = ind, penG = FALSE, penE = FALSE,
+                      alpha = 0.5, scaling = "train")
+\dontrun{
+## Full model, no penalization (set the penalty parameter to zero).
+Full_model <- GnE(drops_GE_GnE, Y = "grain.yield", lambda = 0,
+                  G = "Variety_ID", E = "Experiment", testEnv = testenv,
+                  indices = ind, penG = FALSE, penE = FALSE,
+                  alpha = 0.5, scaling = "train")
+
+## Elastic Net model, set alpha parameter to 0.5.
+Elnet_model <- GnE(drops_GE_GnE, Y = "grain.yield", lambda = NULL,
+                   G = "Variety_ID", E = "Experiment", testEnv = testenv,
+                   indices = ind, penG = FALSE, penE = FALSE,
+                   alpha = 0.5, scaling = "train")
+
+## Lasso model, set alpha parameter to 1.
+Lasso_model <- GnE(drops_GE_GnE, Y = "grain.yield", lambda = NULL,
+                   G = "Variety_ID", E = "Experiment", testEnv = testenv,
+                   indices = ind, penG = FALSE, penE = FALSE,
+                   alpha = 1, scaling = "train")
+
+## Ridge model, set alpha parameter to 0.
+Ridge_model <- GnE(drops_GE_GnE, Y = "grain.yield", lambda = NULL,
+                   G = "Variety_ID", E = "Experiment", testEnv = testenv,
+                   indices = ind, penG = FALSE, penE = FALSE,
+                   alpha = 0, scaling = "train")
+}
+
 }
