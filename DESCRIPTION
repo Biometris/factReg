@@ -25,6 +25,7 @@ Imports:
     glmnet,
     mathjaxr,
     Matrix,
+    rrBLUP,
     stats
 Encoding: UTF-8
 LazyData: true
@@ -32,3 +33,4 @@ LazyDataCompression: gzip
 RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
 RdMacros: mathjaxr
+Suggests: tinytest
