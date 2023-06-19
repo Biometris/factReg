@@ -12,8 +12,6 @@ GnE(
   K = NULL,
   indices = NULL,
   indicesData = NULL,
-  mainCovariates = NULL,
-  mainCovPen = 1,
   testEnv = NULL,
   weight = NULL,
   outputFile = "results_glmnet",
@@ -62,13 +60,6 @@ indices (covariates); one value for each environment and index. It should
 have the environment names as row names (corresponding to the names
 contained in \code{dat$E}); the column names are the indices. If
 \code{indices} (see before) is also provided, the latter will be ignored.}
-
-\item{mainCovariates}{Optional. The columns in \code{dat} containing main
-covariates, i.e. with effects that are constant across genotypes. May
-overlap with indices.}
-
-\item{mainCovPen}{Numeric vector corresponding to \code{mainCovariates},
-indicating the relative penalties used in glmnet. Default: all 1.}
 
 \item{testEnv}{vector (character). Data from these environments are not used
 for fitting the model. Accuracy is evaluated for training and test
@@ -155,8 +146,6 @@ environments, obtained from penalized regression using the estimated
 main effects for the training environments and the averaged indices.}
 \item{parGeno}{dataframe containing the estimated genotypic main effects
 (first column) and sensitivities (subsequent columns)}
-\item{mainPar}{If the option mainCovariates is used, this vector contains
-estimates of the main effects of the indices specified in mainCovariates.}
 \item{trainAccuracyEnv}{a data-frame with the accuracy (r) for each
 training environment, as well as the root mean squre error (RMSE), mean
 abosolute deviation (MAD) and rank (the latter is a proportion: how many

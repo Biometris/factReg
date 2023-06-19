@@ -57,11 +57,6 @@
 #' have the environment names as row names (corresponding to the names
 #' contained in \code{dat$E}); the column names are the indices. If
 #' \code{indices} (see before) is also provided, the latter will be ignored.
-#' @param mainCovariates Optional. The columns in \code{dat} containing main
-#' covariates, i.e. with effects that are constant across genotypes. May
-#' overlap with indices.
-#' @param mainCovPen Numeric vector corresponding to \code{mainCovariates},
-#' indicating the relative penalties used in glmnet. Default: all 1.
 #' @param testEnv vector (character). Data from these environments are not used
 #' for fitting the model. Accuracy is evaluated for training and test
 #' environments separately. The default is \code{NULL}, i.e. no test
@@ -131,8 +126,6 @@
 #'   main effects for the training environments and the averaged indices.}
 #'   \item{parGeno}{dataframe containing the estimated genotypic main effects
 #'   (first column) and sensitivities (subsequent columns)}
-#'   \item{mainPar}{If the option mainCovariates is used, this vector contains
-#'   estimates of the main effects of the indices specified in mainCovariates.}
 #'   \item{trainAccuracyEnv}{a data-frame with the accuracy (r) for each
 #'   training environment, as well as the root mean squre error (RMSE), mean
 #'   abosolute deviation (MAD) and rank (the latter is a proportion: how many
@@ -170,8 +163,6 @@ GnE <- function(dat,
                 K = NULL,
                 indices = NULL,
                 indicesData = NULL,
-                mainCovariates = NULL,
-                mainCovPen = 1,
                 testEnv = NULL,
                 weight = NULL,
                 outputFile = "results_glmnet",
@@ -202,6 +193,10 @@ GnE <- function(dat,
   traitName <- ifelse(is.numeric(Y), names(dat)[Y], Y)
   ## Rename data columns for Y, G and E.
   dat <- renameYGE(dat = dat, Y = Y, G = G, E = E)
+  ## Check kinship.
+  if (!is.null(K)) {
+    stopifnot(all(dat$genotypes %in% colnames(K)))
+  }
   ## Get training envs.
   trainEnv <- setdiff(levels(dat$E), testEnv)
   ## Remove missing values from training envs.
@@ -296,11 +291,6 @@ GnE <- function(dat,
   colnames(ma)[1:(nEnvTrain + nGenoTrain + nEnvTest - 1)] <-
     substring(colnames(ma)[1:(nEnvTrain + nGenoTrain + nEnvTest - 1)],
               first = 2)
-  if (!is.null(mainCovariates)) {
-    ncolMaOld <- ncol(ma)
-    ma <- cbind(ma,
-                Matrix::Matrix(as.matrix(rbind(dTrain, dTest)[, mainCovariates])))
-  }
   if (quadratic) {
     ## Add quadratic columns to design matrix.
     mQuad <- ma[, (nEnvTrain + nEnvTest + nGenoTrain):ncol(ma)] ^ 2
@@ -308,7 +298,6 @@ GnE <- function(dat,
     ma <- cbind(ma, mQuad)
     ## Add the quadratic columns to the indices.
     # from this point: only used to estimate env.main effects for test env.
-    # If there are mainCovariates, these are not included here
     indices <- c(indices, paste0(indices, "_quad"))
   }
   # define the vector indicating to which extent parameters are to be penalized.
@@ -316,17 +305,6 @@ GnE <- function(dat,
   penaltyFactorA[1:(nEnvTrain + nEnvTest)] <- penE
   penaltyFactorA[(nEnvTrain + nEnvTest + 1):
                    (nEnvTrain + nEnvTest + nGenoTrain - 1)] <- penG
-  if (!is.null(mainCovariates)) {
-    if (quadratic) {
-      tempInd <- c((ncolMaOld + 1):(ncolMaOld + length(mainCovariates)),
-                   (ncol(ma) - length(mainCovariates) + 1):ncol(ma))
-    } else {
-      tempInd <- (ncol(ma) - length(mainCovariates) + 1):ncol(ma)
-    }
-    penaltyFactorA[tempInd] <- mainCovPen
-  } else {
-    tempInd <- integer()
-  }
   # note: even if unpenalized, the estimated main effects change,
   # depending on lambda!
   # run glmnet, either (if provided) for a single value of lambda
@@ -348,12 +326,6 @@ GnE <- function(dat,
     lambdaSequence <- lambda
     cfe <- glmnetOutA$beta
     mu <- as.numeric(glmnetOutA$a0)
-    if (!is.null(mainCovariates)) {
-      mainPar <- glmnetOutA$beta[tempInd]
-      names(mainPar) <- colnames(ma)[tempInd]
-    } else {
-      mainPar <- NULL
-    }
   } else {
     glmnetOutA <- glmnet::cv.glmnet(x = ma[1:nrow(dTrain), ], y = dTrain$Y,
                                     lambda = lambda,
@@ -390,11 +362,6 @@ GnE <- function(dat,
       cfe <- glmnetOutA$beta
       mu <- as.numeric(glmnetOutA$a0)
     }
-    if (!is.null(mainCovariates)) {
-      mainPar <- glmnetOutA$glmnet.fit$beta[tempInd, lambdaIndex]
-    } else {
-      mainPar <- NULL
-    }
   }
   ## Extract from the output the estimated environmental main effects
   envMain <- as.matrix(cfe[1:nEnvTrain, lambdaIndex, drop = FALSE])
@@ -410,7 +377,6 @@ GnE <- function(dat,
                                  (nGenoTrain + nEnvTrain + nEnvTest - 1),
                                lambdaIndex]), row.names = levels(dTrain$G))
   ## assign the genotype specific sensitivities (subsequent columns)
-  #cfeIndRows <- rownames(cfe[(nGenoTrain + nEnvTrain + nEnvTest):(nrow(cfe) - length(mainCovariates)), , drop = FALSE])
   cfeIndRows <- rownames(cfe[tempInd2, , drop = FALSE])
   cfeGenotypes <- sapply(X = cfeIndRows, FUN = function(cfeIndRow) {
     substring(strsplit(x = cfeIndRow, split = ":")[[1]][1], first = 2)
@@ -623,7 +589,6 @@ GnE <- function(dat,
               envInfoTrain = indicesTrain,
               envInfoTest  = indicesTest,
               parGeno = parGeno,
-              mainPar = mainPar,
               trainAccuracyEnv = trainAccuracyEnv,
               testAccuracyEnv = testAccuracyEnv,
               trainAccuracyGeno = trainAccuracyGeno,
