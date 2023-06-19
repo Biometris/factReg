@@ -48,11 +48,28 @@ expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
 
 
 ## Check that columns can be refered to by names and by numbers.
-mod1 <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
-            E = "Experiment", indices = indices)
+modBase <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+               E = "Experiment", indices = indices)
 mod1a <- GnE(dat = testDat, Y = 14, G = 2, E = 1, indices = indices)
 
+## Check output structure.
+expect_inherits(modBase, "list")
+expect_equal(names(modBase),
+             c("predTrain", "predTest", "resTrain", "resTest", "mu",
+               "envInfoTrain", "envInfoTest", "parGeno", "trainAccuracyEnv",
+               "testAccuracyEnv", "trainAccuracyGeno", "testAccuracyGeno",
+               "lambda", "lambdaSequence", "RMSEtrain", "RMSEtest", "Y", "G",
+               "E", "indices", "postLasso", "quadratic"))
 
+## Check full output object.
+expect_equal_to_reference(modBase, "modBase")
+
+## Check that test environments can be added.
+modTest <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+               E = "Experiment", indices = indices, testEnv = "Cam12R")
+
+## Check full output object.
+expect_equal_to_reference(modBase, "modTest")
 
 
 
