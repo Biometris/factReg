@@ -187,7 +187,7 @@ GnE <- function(dat,
     lambda <- sort(lambda, decreasing = TRUE)
   }
   ## Get traitName.
-  traitName <- ifelse(is.numeric(Y), names(dat)[Y], Y)
+  traitName <- if (is.numeric(Y)) names(dat)[Y] else Y
   ## Rename data columns for Y, G and E.
   dat <- renameYGE(dat = dat, Y = Y, G = G, E = E)
   ## Check kinship.
@@ -363,7 +363,7 @@ GnE <- function(dat,
   ## Extract from the output the estimated environmental main effects
   envMain <- as.matrix(cfe[1:nEnvTrain, lambdaIndex, drop = FALSE])
   envMain2 <- envMain
-  envMain2[,1] <- cf[1:nEnvTrain] #c(0,cf)
+  envMain2[,1] <- cf[1:nEnvTrain]
   ## Create a data.frame that will contain the estimated genotypic
   ## main effects (first column), and the estimated environmental
   ## sensitivities (subsequent) columns.
@@ -392,8 +392,6 @@ GnE <- function(dat,
   parGeno <- merge(parGeno, parGenoIndices, by.x = "row.names", by.y = "geno")
   rownames(parGeno) <- parGeno[["Row.names"]]
   parGeno <- parGeno[, c("main", indices)]
-
-
   ## If kinship provided replace by kinship predictions.
   if (!is.null(K)) {
     parGenoDat <- parGeno
@@ -405,7 +403,6 @@ GnE <- function(dat,
       parGeno[names((kinPred$pred)), j] <- as.numeric(kinPred$pred)
     }
   }
-
   ## Make predictions for training set.
   predTrain <- as.numeric(predict(object = glmnetOutA,
                                   newx = ma[1:nrow(dTrain), ],
@@ -469,13 +466,9 @@ GnE <- function(dat,
                                     foldid = indFrameTrain2$partition,
                                     grouped = max(table(indFrameTrain2$partition)) > 2)
   }
-  # names(which(glmnetOut$glmnet.fit$beta[,which(glmnetOut$lambda == glmnetOut$lambda.min)]>0))
   parEnvTrain <- predict(object = glmnetOut,
                          newx = as.matrix(indFrameTrain[, indices]),
                          s = "lambda.min")
-  parEnvTrain2 <- predict(object = glmnetOut2,
-                          newx = as.matrix(indFrameTrain2[, indices]),
-                          s = "lambda.min")
   if (!is.null(testEnv)) {
     parEnvTest  <- predict(object = glmnetOut,
                            newx = as.matrix(indFrameTest[, indices]),
