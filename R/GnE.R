@@ -396,7 +396,7 @@ GnE <- function(dat,
   ## Extract from the output the estimated environmental main effects
   envMain <- as.matrix(cfe[1:nEnvTrain, lambdaIndex, drop = FALSE])
   envMain2 <- envMain
-  envMain2[,1] <- cf[1:nEnvTrain]
+  envMain2[, 1] <- cf[1:nEnvTrain]
   ## Create a data.frame that will contain the estimated genotypic
   ## main effects (first column), and the estimated environmental
   ## sensitivities (subsequent) columns.
@@ -437,9 +437,16 @@ GnE <- function(dat,
     }
   }
   ## Make predictions for training set.
-  predTrain <- as.numeric(predict(object = glmnetOutA,
-                                  newx = ma[1:nrow(dTrain), ],
-                                  s = "lambda.min"))
+  cfePred <- cfe[, lambdaIndex]
+  cfePred[(nEnvTrain + nEnvTest + nGenoTrain):ncol(ma)] <-
+    as.matrix(parGeno[, -1])
+  predTrain <- as.numeric(ma[1:nrow(dTrain), ] %*% cfePred + mu)
+
+  #
+  # ## Make predictions for training set.
+  # predTrain <- as.numeric(predict(object = glmnetOutA,
+  #                                 newx = ma[1:nrow(dTrain), ],
+  #                                 s = "lambda.min"))
   resTrain <- dTrain$Y - predTrain
   if (!is.null(testEnv)) {
     predTest <- as.numeric(
