@@ -24,7 +24,6 @@ GnE(
   penG = 0,
   penE = 0,
   scaling = c("train", "all", "no"),
-  postLasso = FALSE,
   quadratic = FALSE,
   verbose = FALSE
 )
@@ -111,10 +110,6 @@ using the mean and and standard deviation in the training environments.
 "all" : using the mean and standard deviation of all environments.
 "no" : No scaling.}
 
-\item{postLasso}{boolean; default \code{FALSE}. Indicates whether to refit
-the model without penalty, using only the variables selected by
-lasso. To do: Require that alpha = 1.}
-
 \item{quadratic}{boolean; default \code{FALSE}. If \code{TRUE}, quadratic
 terms (i.e., squared indices) are added to the model. Only for those indices
 that were selected (CLARIFY).}
@@ -166,7 +161,6 @@ used}
 was used}
 \item{indices}{The indices that were used, i.e. the argument indices that
 was used}
-\item{postLasso}{The postLasso option that was used}
 \item{quadratic}{The quadratic option that was used}
 }
 }

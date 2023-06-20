@@ -96,9 +96,6 @@
 #' using the mean and and standard deviation in the training environments.
 #' "all" : using the mean and standard deviation of all environments.
 #' "no" : No scaling.
-#' @param postLasso boolean; default \code{FALSE}. Indicates whether to refit
-#' the model without penalty, using only the variables selected by
-#' lasso. To do: Require that alpha = 1.
 #' @param quadratic boolean; default \code{FALSE}. If \code{TRUE}, quadratic
 #' terms (i.e., squared indices) are added to the model. Only for those indices
 #' that were selected (CLARIFY).
@@ -148,7 +145,6 @@
 #'   was used}
 #'   \item{indices}{The indices that were used, i.e. the argument indices that
 #'   was used}
-#'   \item{postLasso}{The postLasso option that was used}
 #'   \item{quadratic}{The quadratic option that was used}
 #' }
 #'
@@ -217,7 +213,6 @@ GnE <- function(dat,
                 penG = 0,
                 penE = 0,
                 scaling = c("train", "all", "no"),
-                postLasso = FALSE,
                 quadratic = FALSE,
                 verbose = FALSE) {
   ## Input checks.
@@ -397,29 +392,6 @@ GnE <- function(dat,
     lambdaIndex <- which(lambda == glmnetOutA$lambda.min)
     cfe <- glmnetOutA$glmnet.fit$beta
     mu <- glmnetOutA$glmnet.fit$a0[lambdaIndex]
-    if (postLasso) {
-      lassoModel <- glmnet::glmnet(x = ma , y = dTrain$Y, alpha = 1,
-                                   weights = dTrain$W,
-                                   family = "gaussian",
-                                   lambda = glmnetOutA$lambda.min)
-      ## Post-Selection, with selected significant variables: Refitting.
-      ## Select the non-zero coefficients of env. variables.
-      coeffic <- coef(lassoModel)[-1]
-      ## Keep the subsample of the significant variables.
-      positions <- which(coeffic != 0)
-      # before :
-      # positions <- union(1:(nEnvTrain + nGenoTrain - 1), positions)
-      positions <- union(1:(nEnvTrain + nEnvTest + nGenoTrain - 1), positions)
-      ## Refitting with the selected variables, without penalty.
-      ma <- ma[, positions]
-      glmnetOutA <- glmnet::glmnet(x = ma, y = dTrain$Y, lambda = 0,
-                                   family = "gaussian",
-                                   weights = dTrain$W,
-                                   thresh = 1e-11)
-      lambdaIndex <- 1
-      cfe <- glmnetOutA$beta
-      mu <- as.numeric(glmnetOutA$a0)
-    }
   }
   ## Extract from the output the estimated environmental main effects
   envMain <- as.matrix(cfe[1:nEnvTrain, lambdaIndex, drop = FALSE])
@@ -642,7 +614,6 @@ GnE <- function(dat,
               G = G,
               E = E,
               indices = indices,
-              postLasso = postLasso,
               quadratic = quadratic)
   return(out)
 }

@@ -59,7 +59,7 @@ expect_equal(names(modBase),
                "envInfoTrain", "envInfoTest", "parGeno", "trainAccuracyEnv",
                "testAccuracyEnv", "trainAccuracyGeno", "testAccuracyGeno",
                "lambda", "lambdaSequence", "RMSEtrain", "RMSEtest", "Y", "G",
-               "E", "indices", "postLasso", "quadratic"))
+               "E", "indices", "quadratic"))
 
 ## Check full output object.
 expect_equal_to_reference(modBase, "modBase")
