@@ -14,7 +14,7 @@ perGeno(
   indicesData = NULL,
   testEnv = NULL,
   weight = NULL,
-  useRes = 2,
+  useRes = TRUE,
   outputFile = NULL,
   corType = c("pearson", "spearman"),
   partition = data.frame(),
@@ -65,12 +65,9 @@ weight (inverse variance) of each observation, used in glmnet. Default
 \code{NULL}, giving constant weights.}
 
 \item{useRes}{Indicates whether the genotype-specific regressions are to be
-fitted on the residuals of a model with main effects. 0 means no
-(i.e. fit the regressions on the original data). 1:
-residuals of a model with environmental main effects. 2 (default): genotypic and
-environmental main effects.
-
-no geno genoEnv - 1 eruit}
+fitted on the residuals of a model with main effects. If \code{TRUE}
+residuals of a model with environmental main effects are used, if
+\code{FALSE} the regressions are fitted on the original data.}
 
 \item{outputFile}{The file name of the output files, without .csv extension
 which is added by the function. If not \code{NULL} the prediction accuracies
@@ -107,9 +104,9 @@ per environment are printed on screen.}
 A list with the following elements:
 \describe{
 \item{predTrain}{Vector with predictions for the training set (to do: Add
-the factors genotype and environment; make a dataframe)}
+the factors genotype and environment; make a data.frame)}
 \item{predTest}{Vector with predictions for the test set (to do: Add the
-factors genotype and environment; make a dataframe). To do: add estimated
+factors genotype and environment; make a data.frame). To do: add estimated
 environmental main effects, not only predicted environmental main effects}
 \item{mu}{the estimated overall (grand) mean}
 \item{envInfoTrain}{The estimated environmental main effects, and the
@@ -118,7 +115,7 @@ indices, using penalized regression.}
 \item{envInfoTest}{The predicted environmental main effects for the test
 environments, obtained from penalized regression using the estimated
 main effects for the training environments and the averaged indices.}
-\item{parGeno}{dataframe containing the estimated genotypic
+\item{parGeno}{data.frame containing the estimated genotypic
 main effects (first column) and sensitivities (subsequent columns)}
 \item{testAccuracyEnv}{a \code{data.frame} with the accuracy (r) for each
 test environment}

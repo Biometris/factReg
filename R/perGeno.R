@@ -10,19 +10,16 @@
 #' @inheritParams GnE
 #'
 #' @param useRes Indicates whether the genotype-specific regressions are to be
-#' fitted on the residuals of a model with main effects. 0 means no
-#' (i.e. fit the regressions on the original data). 1:
-#' residuals of a model with environmental main effects. 2 (default): genotypic and
-#' environmental main effects.
-#'
-#' no geno genoEnv - 1 eruit
+#' fitted on the residuals of a model with main effects. If \code{TRUE}
+#' residuals of a model with environmental main effects are used, if
+#' \code{FALSE} the regressions are fitted on the original data.
 #'
 #' @return A list with the following elements:
 #' \describe{
 #'   \item{predTrain}{Vector with predictions for the training set (to do: Add
-#'   the factors genotype and environment; make a dataframe)}
+#'   the factors genotype and environment; make a data.frame)}
 #'   \item{predTest}{Vector with predictions for the test set (to do: Add the
-#'   factors genotype and environment; make a dataframe). To do: add estimated
+#'   factors genotype and environment; make a data.frame). To do: add estimated
 #'   environmental main effects, not only predicted environmental main effects}
 #'   \item{mu}{the estimated overall (grand) mean}
 #'   \item{envInfoTrain}{The estimated environmental main effects, and the
@@ -31,7 +28,7 @@
 #'   \item{envInfoTest}{The predicted environmental main effects for the test
 #'   environments, obtained from penalized regression using the estimated
 #'   main effects for the training environments and the averaged indices.}
-#'   \item{parGeno}{dataframe containing the estimated genotypic
+#'   \item{parGeno}{data.frame containing the estimated genotypic
 #'   main effects (first column) and sensitivities (subsequent columns)}
 #'   \item{testAccuracyEnv}{a \code{data.frame} with the accuracy (r) for each
 #'   test environment}
@@ -65,7 +62,7 @@ perGeno <- function(dat,
                     indicesData = NULL,
                     testEnv = NULL,
                     weight = NULL,
-                    useRes = 2,
+                    useRes = TRUE,
                     outputFile = NULL,
                     corType = c("pearson", "spearman"),
                     partition = data.frame(),
@@ -167,22 +164,7 @@ perGeno <- function(dat,
   cf <- c(modelMain$a0, modelMain$beta[-1])
   names(cf) <- c("(Intercept)", paste0('E', e3$Group.1[-1]),
                  paste0('G', w2$Group.1[-1]))
-  mainOnly <- rep(0, nGenoTrain)
-  names(mainOnly) <- levels(dTrain$G)
-  mainTemp <- cf[(nEnvTrain + 1):(nEnvTrain + nGenoTrain - 1)]
-  names(mainTemp) <- substring(names(mainTemp), first = 2)
-  mainOnly[names(mainTemp)] <- mainTemp
-  ## For comparison, fit the unpenalized linear model with main effects only.
-  #modelMain <- lm(Y ~ E + G, data = dTrain)
-  #cf <- coef(modelMain)
-  # modelMain.lme4 <- lme4::lmer(Y ~ E + (1|G), data = dTrain)
-  # dim(coef(modelMain.lme4)$G)
-  # plot(coef(modelMain.lme4)$G[,1], c(0,cf[-(1:25)]))
-  if (useRes == 1) {
-    modelMain2 <- lm(Y ~ E, data = dTrain)
-    cf2 <- coef(modelMain2)
-  }
-  # Even if useRes is 0 or 1, mainOnly will still be used for comparison with a
+  # Even if useRes is FALSE, mainOnly will still be used for comparison with a
   # main effects only model
   mainOnly <- rep(0, nGenoTrain)
   names(mainOnly) <- levels(dTrain$G)
@@ -190,43 +172,23 @@ perGeno <- function(dat,
   names(mainTemp) <- substring(names(mainTemp), first = 2)
   mainOnly[names(mainTemp)] <- mainTemp
   ## Extract from the output the estimated environmental main effects
-  if (useRes == 1) {
-    envMain <- as.matrix(c(0, cf2[2:nEnvTrain]))
-    rownames(envMain) <- levels(dTrain$E)
-  } else {
-    envMain <- as.matrix(c(0, cf[2:nEnvTrain]))
-    rownames(envMain) <- levels(dTrain$E)
-  }
-  ##########################
-  if (useRes == 1) {
-    dTrain$yRes <- residuals(modelMain2)
-  } else {
-    #dTrain$yRes <- residuals(modelMain)
-    #
-    dTrain$yRes <- dTrain$Y -
-      as.numeric(predict(modelMain, newx = mm, thresh = 1e-18, lambda = 0))
-  }
-  #dTrain$yMainFitted <- fitted(modelMain)
-  #dTest$yMainFitted <- predict.lm(object = modelMain, newdata = dTest)
-
-  # qwe = predict.lm(modelMain, newdata = dTrain); sum(abs(dTrain$yMainFitted - qwe))
-
+  envMain <- as.matrix(c(0, cf[2:nEnvTrain]))
+  rownames(envMain) <- levels(dTrain$E)
+  dTrain$yRes <- dTrain$Y -
+    as.numeric(predict(modelMain, newx = mm, thresh = 1e-18, lambda = 0))
   ## Define the design matrix for the factorial regression model.
   geFormula <- as.formula(paste0("yRes ~ -1 +",
                                  paste(paste0(indices, ":G"),
                                        collapse = " + ")))
   ## Construct design matrix for training set.
   m <- Matrix::sparse.model.matrix(geFormula, data = dTrain)
-  #m[which(is.nan(as.matrix(m)), arr.ind = T)] <- 0
   if (!is.null(testEnv)) {
     ## Construct design matrix for test set.
     geFormula <- as.formula(paste0(" ~ -1 + ",
                                    paste(paste0(indices, ":G"),
                                          collapse = " + ")))
-    #mTest[which(is.nan(as.matrix(mTest)), arr.ind = T)] <- 0
     mTest <- Matrix::sparse.model.matrix(geFormula, data = dTest)
   }
-  #####################################
   predTrain <- rep(NA, nrow(dTrain))
   names(predTrain) <- rownames(dTrain)
   if (!is.null(testEnv)) {
@@ -247,29 +209,22 @@ perGeno <- function(dat,
   lambdaOpt <- rep(NA, nlevels(dTrain$G))
   names(lambdaOpt) <- levels(dTrain$G)
   for (gg in levels(dTrain$G)) {
-    # gg <- levels(dTrain$G)[2]
     ggInd <- which(levels(dTrain$G) == gg)
     cat(ggInd / length(levels(dTrain$G)), "\n")
-    # wrong!
-    #cn <- grep(pattern = gg, x = colnames(m))
     cn <- ggInd + (0:(nIndices - 1)) * nlevels(dTrain$G)
     scn <- (colnames(m))[cn]
     gnInd <- which(dTrain$G == gg)
-    #mgg <- as.matrix(m[gnInd, scn, drop = FALSE])
     mgg <- m[gnInd, scn, drop = FALSE]
     mugg <- colMeans(mgg)
     sdgg <- apply(X = mgg, MARGIN = 2, FUN = sd)
     muTr[scn] <- mugg
     sdTr[scn] <- sdgg
     m[gnInd, scn] <- scale(mgg, center = mugg, scale = sdgg)
-    #rfOut <- randomForest::randomForest(x = as.matrix(m[gnInd, scn]),
-    #                                    y = dTrain$yRes[gnInd])
-    if (useRes > 0) {
+    if (useRes) {
       yTemp <- dTrain$yRes[gnInd]
     } else {
       yTemp <- dTrain$Y[gnInd]
     }
-    #qwe=(as.matrix(m[gnInd, scn, drop = FALSE])); image(cor(qwe))
     glmnetOut <- glmnet::cv.glmnet(x = as.matrix(m[gnInd, scn, drop = FALSE]),
                                    y = yTemp,
                                    weights = dTrain$W[gnInd],
@@ -285,34 +240,23 @@ perGeno <- function(dat,
     mu <- as.numeric(glmnetOut$glmnet.fit$a0[lambdaIndex])
     parGeno[ggInd, ] <- c(mu, cfe)
     lambdaOpt[ggInd] <- glmnetOut$lambda.min
-    #rfOut <- ranger::ranger(x = as.matrix(m[gnInd, scn]),
-    #                        y = dTrain$yRes[gnInd])
-
-    # for rf: as.numeric(rfOut$predicted)
     predTrain[gnInd] <- as.numeric(predict(object = glmnetOut,
                                            newx = as.matrix(m[gnInd, scn]),
                                            s = "lambda.min"))
-    if (useRes == 2) {
+    if (useRes) {
       predTrain[gnInd] <- predTrain[gnInd]  + mainOnly[gg]
     }
-    #######  !!!!!!!!! #######
-
     # labels predTest/Tr correct ?
     if (!is.null(testEnv) & (gg %in% as.character(dTest$G))) {
       mggTest <- as.matrix(mTest[which(dTest$G == gg), scn, drop = FALSE])
       mTest[which(dTest$G == gg), scn] <-
         scale(mggTest, center = mugg, scale = sdgg)
-      #rfPred  <- predict(object = rfOut,
-      #                   newdata = mTest[which(dTest$G == gg), scn])
-      ##rfPred  <- predict(object = rfOut, data = mTest[which(dTest$G == gg), scn])
-
-      #predTest[which(dTest$G == gg)] <- rfPred + mainOnly[gg]
       glmnetPred  <- as.numeric(predict(object = glmnetOut,
                                         newx = mTest[dTest$G == gg,
                                                      scn, drop = FALSE],
                                         s = "lambda.min"))
       predTest[which(dTest$G == gg)] <- glmnetPred
-      if (useRes == 2) {
+      if (useRes) {
         predTest[which(dTest$G == gg)] <-
           predTest[which(dTest$G == gg)] + mainOnly[gg]
       }
@@ -342,7 +286,6 @@ perGeno <- function(dat,
                            s = "lambda.min")
   }
   indicesTest <- NULL
-  #if (useRes == TRUE) {
   ## add the predicted environmental main effects:
   predTrain <- predTrain + as.numeric(parEnvTrain[as.character(dTrain$E), ])
   indicesTrain <- data.frame(indFrameTrain,
@@ -353,7 +296,6 @@ perGeno <- function(dat,
     indicesTest <- data.frame(indFrameTest,
                               envMainPred = as.numeric(parEnvTest))
   }
-  #}
   ## Compute statistics for training data.
   predMain <- mainOnly[as.character(dTrain$G)]
   trainAccuracyEnv <- getAccuracyEnv(datNew = dTrain[, "Y"],
