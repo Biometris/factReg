@@ -247,7 +247,7 @@ GnE <- function(dat,
          "rownames.\n")
   }
   ## Check testEnv.
-  if (!is.null(testEnv) && (!is.character(testEnv) || length(testEnv < 1) ||
+  if (!is.null(testEnv) && (!is.character(testEnv) || length(testEnv) < 1 ||
                             !all(testEnv %in% levels(dat$E)))) {
     stop("testEnv should be a vector of environments present in dat.\n")
   }
