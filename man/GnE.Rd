@@ -14,8 +14,7 @@ GnE(
   indicesData = NULL,
   testEnv = NULL,
   weight = NULL,
-  outputFile = "results_glmnet",
-  outputDir = getwd(),
+  outputFile = NULL,
   corType = c("pearson", "spearman"),
   partition = data.frame(),
   nfolds = NULL,
@@ -70,10 +69,10 @@ case, no accuracy is reported for test environments (CHECK correctness).}
 weight (inverse variance) of each observation, used in glmnet. Default
 \code{NULL}, giving constant weights.}
 
-\item{outputFile}{The file name of the output files, without .csv extension,
-which is added by the function.}
-
-\item{outputDir}{The directory to which output-files are to be written.}
+\item{outputFile}{The file name of the output files, without .csv extension
+which is added by the function. If not \code{NULL} the prediction accuracies
+for training and test environments are written to separate files. If
+\code{NULL} the output is not written to file.}
 
 \item{corType}{type of correlation: Pearson (default) or Spearman rank sum.}
 
@@ -121,9 +120,9 @@ per environment are printed on screen.}
 A list with the following elements:
 \describe{
 \item{predTrain}{Vector with predictions for the training set (to do: Add
-the factors genotype and environment; make a dataframe)}
+the factors genotype and environment; make a data.frame)}
 \item{predTest}{Vector with predictions for the test set (to do: Add the
-factors genotype and environment; make a dataframe). To do: add estimated
+factors genotype and environment; make a data.frame). To do: add estimated
 environmental main effects, not only predicted environmental main effects}
 \item{resTrain}{Vector with residuals for the training set}
 \item{resTest}{Vector with residuals for the test set}
@@ -134,11 +133,11 @@ indices, using penalized regression.}
 \item{envInfoTest}{The predicted environmental main effects for the test
 environments, obtained from penalized regression using the estimated
 main effects for the training environments and the averaged indices.}
-\item{parGeno}{dataframe containing the estimated genotypic main effects
+\item{parGeno}{data.frame containing the estimated genotypic main effects
 (first column) and sensitivities (subsequent columns)}
 \item{trainAccuracyEnv}{a data-frame with the accuracy (r) for each
-training environment, as well as the root mean squre error (RMSE), mean
-abosolute deviation (MAD) and rank (the latter is a proportion: how many
+training environment, as well as the root mean square error (RMSE), mean
+absolute deviation (MAD) and rank (the latter is a proportion: how many
 of the best 5 genotypes are in the top 10). To be removed or further
 developed. All these quantities are also evaluated for a model with only
 genotypic and environmental main effects (columns rMain, RMSEMain and

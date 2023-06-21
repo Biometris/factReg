@@ -15,8 +15,7 @@ perGeno(
   testEnv = NULL,
   weight = NULL,
   useRes = 2,
-  outputFile = "results_glmnet",
-  outputDir = getwd(),
+  outputFile = NULL,
   corType = c("pearson", "spearman"),
   partition = data.frame(),
   nfolds = NULL,
@@ -72,10 +71,10 @@ fitted on the residuals of a model with main effects. 0 means no
 residuals of a model with environmental main effects. 2 (default): genotypic and
 environmental main effects.}
 
-\item{outputFile}{The file name of the output files, without .csv extension,
-which is added by the function.}
-
-\item{outputDir}{The directory to which output-files are to be written.}
+\item{outputFile}{The file name of the output files, without .csv extension
+which is added by the function. If not \code{NULL} the prediction accuracies
+for training and test environments are written to separate files. If
+\code{NULL} the output is not written to file.}
 
 \item{corType}{type of correlation: Pearson (default) or Spearman rank sum.}
 

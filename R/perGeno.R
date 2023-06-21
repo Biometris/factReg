@@ -66,8 +66,7 @@ perGeno <- function(dat,
                     testEnv = NULL,
                     weight = NULL,
                     useRes = 2,
-                    outputFile = "results_glmnet",
-                    outputDir = getwd(),
+                    outputFile = NULL,
                     corType = c("pearson", "spearman"),
                     partition = data.frame(),
                     nfolds = NULL,
@@ -404,16 +403,16 @@ perGeno <- function(dat,
   } else {
     RMSEtest <- NULL
   }
-  ## Write output to csv.
-  resultFilePerEnvTrain <- file.path(outputDir,
-                                     paste0(outputFile, "_perEnv_Train.csv"))
-  write.csv(trainAccuracyEnv, file = resultFilePerEnvTrain,
-            row.names = FALSE, quote = FALSE)
-  if (!is.null(testEnv)) {
-    resultFilePerEnvTest <- file.path(outputDir,
-                                      paste0(outputFile, "_perEnv_Test.csv"))
-    write.csv(testAccuracyEnv, file = resultFilePerEnvTest,
+  if (!is.null(outputFile)) {
+    ## Write output to csv.
+    resultFilePerEnvTrain <- paste0(outputFile, "_perEnv_Train.csv")
+    write.csv(trainAccuracyEnv, file = resultFilePerEnvTrain,
               row.names = FALSE, quote = FALSE)
+    if (!is.null(testEnv)) {
+      resultFilePerEnvTest <- paste0(outputFile, "_perEnv_Test.csv")
+      write.csv(testAccuracyEnv, file = resultFilePerEnvTest,
+                row.names = FALSE, quote = FALSE)
+    }
   }
   if (verbose) {
     ## Print output to console.
