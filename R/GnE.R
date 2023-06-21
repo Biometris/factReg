@@ -87,7 +87,6 @@
 #' is optimised in cross validation.
 #' Default: NULL (defined by glmnet).
 #' Important special case: lambda = 0 (no penalty).
-#' May be better handled with lm rather than glmnet (ask Vahe)
 #' @param penG numeric; default 0. If 1, genotypic main effects are
 #' penalized. If 0, they are not. Any non negative real number is allowed.
 #' @param penE numeric; default 0. If 1, environmental main effects are
@@ -98,8 +97,7 @@
 #' "all" : using the mean and standard deviation of all environments.
 #' "no" : No scaling.
 #' @param quadratic boolean; default \code{FALSE}. If \code{TRUE}, quadratic
-#' terms (i.e., squared indices) are added to the model. Only for those indices
-#' that were selected (CLARIFY).
+#' terms (i.e., squared indices) are added to the model.
 #' @param verbose boolean; default \code{FALSE}. If \code{TRUE}, the accuracies
 #' per environment are printed on screen.
 #'

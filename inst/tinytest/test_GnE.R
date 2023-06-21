@@ -71,7 +71,10 @@ expect_equal_to_reference(modBase, "modBase")
 
 expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                  E = "Experiment", indices = indices, testEnv = 1),
-             "abc")
+             "testEnv should be a vector of environments present in dat")
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, testEnv = "bla"),
+             "testEnv should be a vector of environments present in dat")
 
 
 modTest <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",

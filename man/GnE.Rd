@@ -94,8 +94,7 @@ used to specify the number of folds to be used in glmnet.}
 \item{lambda}{Numeric vector; defines the grid over which the penalty lambda
 is optimised in cross validation.
 Default: NULL (defined by glmnet).
-Important special case: lambda = 0 (no penalty).
-May be better handled with lm rather than glmnet (ask Vahe)}
+Important special case: lambda = 0 (no penalty).}
 
 \item{penG}{numeric; default 0. If 1, genotypic main effects are
 penalized. If 0, they are not. Any non negative real number is allowed.}
@@ -110,8 +109,7 @@ using the mean and and standard deviation in the training environments.
 "no" : No scaling.}
 
 \item{quadratic}{boolean; default \code{FALSE}. If \code{TRUE}, quadratic
-terms (i.e., squared indices) are added to the model. Only for those indices
-that were selected (CLARIFY).}
+terms (i.e., squared indices) are added to the model.}
 
 \item{verbose}{boolean; default \code{FALSE}. If \code{TRUE}, the accuracies
 per environment are printed on screen.}
