@@ -9,13 +9,13 @@
 #'
 #' @inheritParams GnE
 #'
-#' @param genoAcc character. The accuracies per environment are evaluated
-#' using these genotypes. It must be a subset of the genotypes in \code{dat}
 #' @param useRes Indicates whether the genotype-specific regressions are to be
 #' fitted on the residuals of a model with main effects. 0 means no
 #' (i.e. fit the regressions on the original data). 1:
 #' residuals of a model with environmental main effects. 2 (default): genotypic and
 #' environmental main effects.
+#'
+#' no geno genoEnv - 1 eruit
 #'
 #' @return A list with the following elements:
 #' \describe{
@@ -71,7 +71,6 @@ perGeno <- function(dat,
                     partition = data.frame(),
                     nfolds = NULL,
                     scaling = c( "no", "train", "all"),
-                    genoAcc = NULL,
                     verbose = FALSE,
                     alpha = 1) {
   scaling <- match.arg(scaling)
@@ -355,16 +354,6 @@ perGeno <- function(dat,
                               envMainPred = as.numeric(parEnvTest))
   }
   #}
-  if (!is.null(genoAcc)) {
-    predTrain <- predTrain[which(dTrain$G %in% genoAcc)]
-    dTrain <- dTrain[dTrain$G %in% genoAcc,]
-    dTrain <- droplevels(dTrain)
-    if (!is.null(testEnv)) {
-      predTest <- predTest[which(dTest$G %in% genoAcc)]
-      dTest <- dTest[dTest$G %in% genoAcc,]
-      dTest <- droplevels(dTest)
-    }
-  }
   ## Compute statistics for training data.
   predMain <- mainOnly[as.character(dTrain$G)]
   trainAccuracyEnv <- getAccuracyEnv(datNew = dTrain[, "Y"],

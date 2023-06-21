@@ -20,7 +20,6 @@ perGeno(
   partition = data.frame(),
   nfolds = NULL,
   scaling = c("no", "train", "all"),
-  genoAcc = NULL,
   verbose = FALSE,
   alpha = 1
 )
@@ -69,7 +68,9 @@ weight (inverse variance) of each observation, used in glmnet. Default
 fitted on the residuals of a model with main effects. 0 means no
 (i.e. fit the regressions on the original data). 1:
 residuals of a model with environmental main effects. 2 (default): genotypic and
-environmental main effects.}
+environmental main effects.
+
+no geno genoEnv - 1 eruit}
 
 \item{outputFile}{The file name of the output files, without .csv extension
 which is added by the function. If not \code{NULL} the prediction accuracies
@@ -95,9 +96,6 @@ used to specify the number of folds to be used in glmnet.}
 using the mean and and standard deviation in the training environments.
 "all" : using the mean and standard deviation of all environments.
 "no" : No scaling.}
-
-\item{genoAcc}{character. The accuracies per environment are evaluated
-using these genotypes. It must be a subset of the genotypes in \code{dat}}
 
 \item{verbose}{boolean; default \code{FALSE}. If \code{TRUE}, the accuracies
 per environment are printed on screen.}
