@@ -238,9 +238,10 @@ GnE <- function(dat,
       (!is.null(indices) && !is.null(indicesData))) {
     stop("Either indices or indicesData should be provided.\n")
   }
-  if (!is.null(indices) && (!is.character(indices)) ||
-      !all(hasName(x = dat, name = indices))) {
-    stop("indices should be a vector of columns in dat.\n")
+  if (!is.null(indices) && (!is.character(indices) ||
+      length(indices) <= 1 ||
+      !all(hasName(x = dat, name = indices)))) {
+    stop("indices should be a vector of length > 1 of columns in dat.\n")
   }
   if (!is.null(indicesData) && (!inherits(indicesData, "data.frame") ||
     !all(levels(dat$E) %in% rownames(indicesData)))) {

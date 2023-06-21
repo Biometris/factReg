@@ -41,7 +41,10 @@ expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
              "Either indices or indicesData should be provided")
 expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                  E = "Experiment", indices = 1),
-             "indices should be a vector of columns in dat")
+             "indices should be a vector of length > 1 of columns in dat")
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices[1]),
+             "indices should be a vector of length > 1 of columns in dat")
 expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                  E = "Experiment", indicesData = 1),
              "indicesData should be a data.frame with all environments")
