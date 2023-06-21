@@ -239,14 +239,19 @@ GnE <- function(dat,
     stop("Either indices or indicesData should be provided.\n")
   }
   if (!is.null(indices) && (!is.character(indices) ||
-      length(indices) <= 1 ||
-      !all(hasName(x = dat, name = indices)))) {
+                            length(indices) <= 1 ||
+                            !all(hasName(x = dat, name = indices)))) {
     stop("indices should be a vector of length > 1 of columns in dat.\n")
   }
   if (!is.null(indicesData) && (!inherits(indicesData, "data.frame") ||
-    !all(levels(dat$E) %in% rownames(indicesData)))) {
+                                !all(levels(dat$E) %in% rownames(indicesData)))) {
     stop("indicesData should be a data.frame with all environments in its ",
          "rownames.\n")
+  }
+  ## Check testEnv.
+  if (!is.null(testEnv) && (!is.character(testEnv) || length(testEnv < 1) ||
+                            !all(testEnv %in% levels(dat$E)))) {
+    stop("testEnv should be a vector of environments present in dat.\n")
   }
   ## Check kinship.
   if (!is.null(K)) {

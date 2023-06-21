@@ -68,6 +68,12 @@ expect_equal(names(modBase),
 expect_equal_to_reference(modBase, "modBase")
 
 ## Check that test environments can be added.
+
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, testEnv = 1),
+             "abc")
+
+
 modTest <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                E = "Experiment", indices = indices, testEnv = "Cam12R")
 
