@@ -21,6 +21,10 @@ testDat <- droplevels(testDat)
 
 indices <- c("Tnight.Early", "Tnight.Flo")
 
+indicesDat <- testDat[testDat$Variety_ID == "A3",
+                      c("Tnight.Early", "Tnight.Flo")]
+rownames(indicesDat) <- substring(rownames(indicesDat), first = 1, last = 6)
+
 ### Check that input checks work as expected.
 expect_error(GnE(dat = 1, Y = 1, G = 1, E = 1),
              "dat should be a data.frame")
@@ -45,10 +49,6 @@ expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
 expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                  E = "Experiment", indices = indices[1]),
              "indices should be a vector of length > 1 of columns in dat")
-expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
-                 E = "Experiment", indicesData = 1),
-             "indicesData should be a data.frame with all environments")
-
 
 ## Check that columns can be refered to by names and by numbers.
 modBase <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
@@ -65,7 +65,7 @@ expect_equal(names(modBase),
                "E", "indices", "quadratic"))
 
 ## Check full output object.
-expect_equal_to_reference(modBase, "modBase")
+expect_equal_to_reference(modBase, "modBaseGnE")
 
 ## Check that test environments can be added.
 
@@ -81,7 +81,35 @@ modTest <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                E = "Experiment", indices = indices, testEnv = "Cam12R")
 
 ## Check full output object.
-expect_equal_to_reference(modBase, "modTest")
+expect_equal_to_reference(modTest, "modTestGnE")
+
+
+## Check that indicesData can be used.
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indicesData = 1),
+             "indicesData should be a data.frame with all environments")
+expect_error(GnE(dat = testDat[testDat$Experiment != "Cam12R", ],
+                 Y = "grain.yield", G = "Variety_ID", E = "Experiment",
+                 indicesData = indicesDat),
+             "All environments in indicesData should be in dat")
+
+expect_warning(modIndDat <- GnE(dat = testDat, Y = "grain.yield",
+                                G = "Variety_ID", E = "Experiment",
+                                indicesData = indicesDat),
+               "The following columns in indicesDat are already in dat")
+
+expect_equal(mean(modIndDat$trainAccuracyEnv$r), 0.674521689495499)
+
+
+## Check that redundant genotypes are removed.
+expect_warning(GnE(dat = testDat[!testDat$Experiment %in% c("Gai12W", "Gai13R"), ],
+                   Y = "grain.yield", G = "Variety_ID",
+                   E = "Experiment", indices = indices),
+               "the following genotypes have < 10 observations, and are removed")
+expect_error(GnE(dat = testDat[!testDat$Experiment %in% c("Gai12W", "Gai13R"), ],
+                   Y = "grain.yield", G = "Variety_ID",
+                   E = "Experiment", indices = indices),
+               "No data left in training set")
 
 
 

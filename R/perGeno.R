@@ -67,15 +67,19 @@ perGeno <- function(dat,
                     corType = c("pearson", "spearman"),
                     partition = data.frame(),
                     nfolds = NULL,
-                    scaling = c( "no", "train", "all"),
+                    scaling = c("train", "all", "no"),
                     verbose = FALSE,
                     alpha = 1) {
-  scaling <- match.arg(scaling)
-  corType <- match.arg(corType)
+  ## Input checks.
+  if (!inherits(dat, "data.frame")) {
+    stop("dat should be a data.frame.\n")
+  }
   ## Get traitName.
   traitName <- ifelse(is.numeric(Y), names(dat)[Y], Y)
   ## Rename data columns for Y, G and E.
   dat <- renameYGE(dat = dat, Y = Y, G = G, E = E)
+  scaling <- match.arg(scaling)
+  corType <- match.arg(corType)
   ## Either indices or indicesData should be provided.
   if ((is.null(indices) && is.null(indicesData)) ||
       (!is.null(indices) && !is.null(indicesData))) {
@@ -86,10 +90,22 @@ perGeno <- function(dat,
                             !all(hasName(x = dat, name = indices)))) {
     stop("indices should be a vector of length > 1 of columns in dat.\n")
   }
-  if (!is.null(indicesData) && (!inherits(indicesData, "data.frame") ||
-                                !all(levels(dat$E) %in% rownames(indicesData)))) {
-    stop("indicesData should be a data.frame with all environments in its ",
-         "rownames.\n")
+  if (!is.null(indicesData)) {
+    if (!inherits(indicesData, "data.frame") ||
+        !all(levels(dat$E) %in% rownames(indicesData))) {
+      stop("indicesData should be a data.frame with all environments in its ",
+           "rownames.\n")
+    }
+    if (!all(rownames(indicesData) %in% levels(dat$E))) {
+      stop("All environments in indicesData should be in dat.\n")
+    }
+    presCols <- colnames(indicesData)[colnames(indicesData) %in%
+                                        colnames(dat)]
+    if (length(presCols) > 0) {
+      warning("The following columns in indicesDat are already in dat. Values ",
+              "in dat will be overwritten:\n",
+              paste(presCols, collapse = ", "), ".\n")
+    }
   }
   ## Check testEnv.
   if (!is.null(testEnv) && (!is.character(testEnv) || length(testEnv) < 1 ||
@@ -103,16 +119,9 @@ perGeno <- function(dat,
   dat <- droplevels(dat)
   if (!is.null(indicesData)) {
     indices <- colnames(indicesData)
-    nIndices <- ncol(indicesData)
+    ## Remove columns from dat that are also in indices and then merge indices.
     dat <- dat[, setdiff(names(dat), indices)]
-    qw <- matrix(nrow = nrow(dat), ncol = nIndices,
-                 dimnames = list(NULL, indices))
-    dat <- data.frame(dat, qw)
-    for (ind in indices) {
-      for (env in levels(dat$E)) {
-        dat[dat$E == env, ind] <- indicesData[env, ind]
-      }
-    }
+    dat <- merge(dat, indicesData, by.x = "E", by.y = "row.names")
   }
   ## Scale environmental variables.
   if (scaling == "train") {
@@ -133,9 +142,11 @@ perGeno <- function(dat,
   redundantGeno <- names(which(table(dTrain$G[!is.na(dTrain$Y)]) < 10))
   if (length(redundantGeno) > 0) {
     warning("the following genotypes have < 10 observations, and are removed:",
-            "\n\n", paste(redundantGeno, collapse = ", "), "\n\n",
-            "See also the documentation of the function nGnE.\n")
+            "\n\n", paste(redundantGeno, collapse = ", "), "\n")
     dTrain <- dTrain[!(dTrain$G %in% redundantGeno), ]
+  }
+  if (nrow(dTrain) == 0) {
+    stop("No data left in training set.\n")
   }
   dTrain <- droplevels(dTrain)
   if (!is.null(testEnv)) {

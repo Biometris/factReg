@@ -19,7 +19,7 @@ perGeno(
   corType = c("pearson", "spearman"),
   partition = data.frame(),
   nfolds = NULL,
-  scaling = c("no", "train", "all"),
+  scaling = c("train", "all", "no"),
   verbose = FALSE,
   alpha = 1
 )

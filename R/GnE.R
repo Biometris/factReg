@@ -241,10 +241,22 @@ GnE <- function(dat,
                             !all(hasName(x = dat, name = indices)))) {
     stop("indices should be a vector of length > 1 of columns in dat.\n")
   }
-  if (!is.null(indicesData) && (!inherits(indicesData, "data.frame") ||
-                                !all(levels(dat$E) %in% rownames(indicesData)))) {
-    stop("indicesData should be a data.frame with all environments in its ",
-         "rownames.\n")
+  if (!is.null(indicesData)) {
+    if (!inherits(indicesData, "data.frame") ||
+        !all(levels(dat$E) %in% rownames(indicesData))) {
+      stop("indicesData should be a data.frame with all environments in its ",
+           "rownames.\n")
+    }
+    if (!all(rownames(indicesData) %in% levels(dat$E))) {
+      stop("All environments in indicesData should be in dat.\n")
+    }
+    presCols <- colnames(indicesData)[colnames(indicesData) %in%
+                                        colnames(dat)]
+    if (length(presCols) > 0) {
+      warning("The following columns in indicesDat are already in dat. Values ",
+              "in dat will be overwritten:\n",
+              paste(presCols, collapse = ", "), ".\n")
+    }
   }
   ## Check testEnv.
   if (!is.null(testEnv) && (!is.character(testEnv) || length(testEnv) < 1 ||
@@ -258,20 +270,13 @@ GnE <- function(dat,
   ## Get training envs.
   trainEnv <- setdiff(levels(dat$E), testEnv)
   ## Remove missing values from training envs.
-  dat <- dat[!(is.na(dat$Y) & dat$E %in% trainEnv),]
+  dat <- dat[!(is.na(dat$Y) & dat$E %in% trainEnv), ]
   dat <- droplevels(dat)
   if (!is.null(indicesData)) {
     indices <- colnames(indicesData)
-    nIndices <- ncol(indicesData)
+    ## Remove columns from dat that are also in indices and then merge indices.
     dat <- dat[, setdiff(names(dat), indices)]
-    qw <- matrix(NA, nrow(dat), nIndices)
-    colnames(qw) <- indices
-    dat <- data.frame(dat, qw)
-    for (ind in indices) {
-      for (env in levels(dat$E)) {
-        dat[which(dat$E == env), ind] <- indicesData[[env, ind]]
-      }
-    }
+    dat <- merge(dat, indicesData, by.x = "E", by.y = "row.names")
   }
   ## Scale environmental variables.
   if (scaling == "train") {
@@ -293,11 +298,13 @@ GnE <- function(dat,
   redundantGeno <- names(which(table(dTrain$G[!is.na(dTrain$Y)]) < 10))
   if (length(redundantGeno) > 0) {
     warning("the following genotypes have < 10 observations, and are removed:",
-            "\n\n", paste(redundantGeno, collapse = ", "), "\n\n",
-            "See also the documentation of the function nGnE.\n")
+            "\n\n", paste(redundantGeno, collapse = ", "), "\n")
     dTrain <- dTrain[!(dTrain$G %in% redundantGeno), ]
   }
   dTrain <- droplevels(dTrain)
+  if (nrow(dTrain) == 0) {
+    stop("No data left in training set.\n")
+  }
   if (!is.null(testEnv)) {
     dTest <- dat[dat$E %in% testEnv, ]
     dTest <- droplevels(dTest)
@@ -305,8 +312,9 @@ GnE <- function(dat,
   } else{
     dTest <- NULL
   }
+  nEnv <- nlevels(dat$E)
   nEnvTest <- length(testEnv)
-  nEnvTrain <- nlevels(dat$E) - nEnvTest
+  nEnvTrain <- nEnv - nEnvTest
   nGenoTrain <- nlevels(dTrain$G)
   ## When partition == data.frame() (the default),
   ## do leave one environment out cross-validation.
@@ -346,12 +354,11 @@ GnE <- function(dat,
   opts <- options(na.action = "na.pass")
   on.exit(options(opts), add = TRUE)
   ma <- Matrix::sparse.model.matrix(geFormula, data = rbind(dTrain, dTest))
-  colnames(ma)[1:(nEnvTrain + nGenoTrain + nEnvTest - 1)] <-
-    substring(colnames(ma)[1:(nEnvTrain + nGenoTrain + nEnvTest - 1)],
-              first = 2)
+  colnames(ma)[1:(nEnv + nGenoTrain - 1)] <-
+    substring(colnames(ma)[1:(nEnv + nGenoTrain - 1)], first = 2)
   if (quadratic) {
     ## Add quadratic columns to design matrix.
-    mQuad <- ma[, (nEnvTrain + nEnvTest + nGenoTrain):ncol(ma)] ^ 2
+    mQuad <- ma[, (nEnv + nGenoTrain):ncol(ma)] ^ 2
     colnames(mQuad) <- paste0(colnames(mQuad), "_quad")
     ma <- cbind(ma, mQuad)
     ## Add the quadratic columns to the indices.
@@ -360,9 +367,8 @@ GnE <- function(dat,
   }
   # define the vector indicating to which extent parameters are to be penalized.
   penaltyFactorA <- rep(1, ncol(ma))
-  penaltyFactorA[1:(nEnvTrain + nEnvTest)] <- penE
-  penaltyFactorA[(nEnvTrain + nEnvTest + 1):
-                   (nEnvTrain + nEnvTest + nGenoTrain - 1)] <- penG
+  penaltyFactorA[1:nEnv] <- penE
+  penaltyFactorA[(nEnv + 1):(nEnv + nGenoTrain - 1)] <- penG
   # note: even if unpenalized, the estimated main effects change,
   # depending on lambda!
   # run glmnet, either (if provided) for a single value of lambda
@@ -405,11 +411,10 @@ GnE <- function(dat,
   ## Create a data.frame that will contain the estimated genotypic
   ## main effects (first column), and the estimated environmental
   ## sensitivities (subsequent) columns.
-  tempInd2 <- (nEnvTrain + nEnvTest + nGenoTrain):ncol(ma)
+  tempInd2 <- (nEnv + nGenoTrain):ncol(ma)
   ## assign the genotypic main effects
   parGeno <-
-    data.frame(main = c(0, cfe[(nEnvTrain + nEnvTest + 1):
-                                 (nGenoTrain + nEnvTrain + nEnvTest - 1),
+    data.frame(main = c(0, cfe[(nEnv + 1): (nGenoTrain + nEnv - 1),
                                lambdaIndex]), row.names = levels(dTrain$G))
   ## assign the genotype specific sensitivities (subsequent columns)
   cfeIndRows <- rownames(cfe[tempInd2, , drop = FALSE])
@@ -443,8 +448,7 @@ GnE <- function(dat,
   }
   ## Make predictions for training set.
   cfePred <- cfe[, lambdaIndex]
-  cfePred[(nEnvTrain + nEnvTest + nGenoTrain):ncol(ma)] <-
-    as.matrix(parGeno[, -1])
+  cfePred[(nEnv + nGenoTrain):ncol(ma)] <- as.matrix(parGeno[, -1])
   predTrain <- as.numeric(ma[1:nrow(dTrain), ] %*% cfePred + mu)
   resTrain <- dTrain$Y - predTrain
   if (!is.null(testEnv)) {

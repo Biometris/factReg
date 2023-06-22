@@ -9,11 +9,11 @@
 More about what it does (maybe more than one line) Use four spaces when indenting paragraphs within the Description.
 }
 \author{
-\strong{Maintainer}: Kruijer Willem \email{willem.kruijer@wur.nl} (\href{https://orcid.org/0000-0001-7179-1733}{ORCID})
+\strong{Maintainer}: Bart-Jan van Rossum \email{bart-jan.vanrossum@wur.nl} (\href{https://orcid.org/0000-0002-8673-2514}{ORCID})
 
 Authors:
 \itemize{
-  \item Bart-Jan van Rossum (\href{https://orcid.org/0000-0002-8673-2514}{ORCID})
+  \item Kruijer Willem (\href{https://orcid.org/0000-0001-7179-1733}{ORCID})
 }
 
 Other contributors:
