@@ -76,22 +76,41 @@ perGeno <- function(dat,
   traitName <- ifelse(is.numeric(Y), names(dat)[Y], Y)
   ## Rename data columns for Y, G and E.
   dat <- renameYGE(dat = dat, Y = Y, G = G, E = E)
+  ## Either indices or indicesData should be provided.
+  if ((is.null(indices) && is.null(indicesData)) ||
+      (!is.null(indices) && !is.null(indicesData))) {
+    stop("Either indices or indicesData should be provided.\n")
+  }
+  if (!is.null(indices) && (!is.character(indices) ||
+                            length(indices) <= 1 ||
+                            !all(hasName(x = dat, name = indices)))) {
+    stop("indices should be a vector of length > 1 of columns in dat.\n")
+  }
+  if (!is.null(indicesData) && (!inherits(indicesData, "data.frame") ||
+                                !all(levels(dat$E) %in% rownames(indicesData)))) {
+    stop("indicesData should be a data.frame with all environments in its ",
+         "rownames.\n")
+  }
+  ## Check testEnv.
+  if (!is.null(testEnv) && (!is.character(testEnv) || length(testEnv) < 1 ||
+                            !all(testEnv %in% levels(dat$E)))) {
+    stop("testEnv should be a vector of environments present in dat.\n")
+  }
   ## Get training envs.
   trainEnv <- setdiff(levels(dat$E), testEnv)
-  #remove missing values from training env's
-  dat <- dat[!(is.na(dat$Y) & dat$E %in% trainEnv),]
+  ## Remove missing values from training envs.
+  dat <- dat[!(is.na(dat$Y) & dat$E %in% trainEnv), ]
   dat <- droplevels(dat)
   if (!is.null(indicesData)) {
     indices <- colnames(indicesData)
     nIndices <- ncol(indicesData)
-    stopifnot(all(levels(dat$E) %in% rownames(indicesData)))
     dat <- dat[, setdiff(names(dat), indices)]
     qw <- matrix(nrow = nrow(dat), ncol = nIndices,
                  dimnames = list(NULL, indices))
     dat <- data.frame(dat, qw)
     for (ind in indices) {
       for (env in levels(dat$E)) {
-        dat[which(dat$E == env), ind] <- indicesData[env, ind]
+        dat[dat$E == env, ind] <- indicesData[env, ind]
       }
     }
   }
@@ -100,11 +119,6 @@ perGeno <- function(dat,
     muTr <- colMeans(dat[dat$E %in% trainEnv, indices])
     sdTr <- sapply(X = dat[dat$E %in% trainEnv, indices], sd)
     dat[, indices] <- scale(dat[, indices], center = muTr, scale = sdTr)
-    # for (gn in levels(dTrain$G)) {
-    #   muTr <- colMeans(dat[(dat$G == gn) & (dat$E %in% trainEnv), indices])
-    #   sdTr <- sapply(X = dat[(dat$G == gn) & (dat$E %in% trainEnv), indices], sd)
-    #   dat[dat$G == gn, indices] <- scale(dat[dat$G == gn, indices], center = muTr, scale = sdTr)
-    # }
   } else if (scaling == "all") {
     dat[, indices] <- scale(dat[, indices])
   }
@@ -114,7 +128,6 @@ perGeno <- function(dat,
     stopifnot(length(weight) == nrow(dat))
     dat$W <- weight
   }
-  trainEnv <- setdiff(levels(dat$E), testEnv)
   ## Split dat into training and test set.
   dTrain <- dat[dat$E %in% trainEnv, ]
   redundantGeno <- names(which(table(dTrain$G[!is.na(dTrain$Y)]) < 10))
@@ -150,44 +163,32 @@ perGeno <- function(dat,
     nfolds <- length(unique(foldid))
   } else {
     foldid <- NULL
-    if (is.null(nfolds)) {
-      nfolds <- 10
-    }
+    if (is.null(nfolds)) nfolds <- 10
   }
-  # just to het the names ...
-  w2 <- aggregate(x = dTrain$Y, by = list(dTrain$G),
-                  FUN = mean, na.rm = TRUE)
-  e3 <- aggregate(x = dTrain$Y, by = list(dTrain$E),
-                  FUN = mean, na.rm = TRUE)
   mm <- Matrix::sparse.model.matrix(Y ~ E + G, data = dTrain)
   modelMain <- glmnet::glmnet(y = dTrain$Y, x = mm, thresh = 1e-18, lambda = 0)
   cf <- c(modelMain$a0, modelMain$beta[-1])
-  names(cf) <- c("(Intercept)", paste0('E', e3$Group.1[-1]),
-                 paste0('G', w2$Group.1[-1]))
-  # Even if useRes is FALSE, mainOnly will still be used for comparison with a
-  # main effects only model
-  mainOnly <- rep(0, nGenoTrain)
-  names(mainOnly) <- levels(dTrain$G)
-  mainTemp <- cf[(nEnvTrain + 1):(nEnvTrain + nGenoTrain - 1)]
-  names(mainTemp) <- substring(names(mainTemp), first = 2)
-  mainOnly[names(mainTemp)] <- mainTemp
+  names(cf) <- c("(Intercept)", paste0('E', levels(dTrain$E)[-1]),
+                 paste0('G', levels(dTrain$G)[-1]))
+  ## Even if useRes is FALSE, genoMain will still be used for comparison with a
+  ## main effects only model
+  genoMain <- setNames(c(0, cf[(nEnvTrain + 1):(nEnvTrain + nGenoTrain - 1)]),
+                       levels(dTrain$G))
   ## Extract from the output the estimated environmental main effects
-  envMain <- as.matrix(c(0, cf[2:nEnvTrain]))
-  rownames(envMain) <- levels(dTrain$E)
+  envMain <- matrix(c(0, cf[2:nEnvTrain]), ncol = 1,
+                    dimnames = list(levels(dTrain$E)))
   dTrain$yRes <- dTrain$Y -
     as.numeric(predict(modelMain, newx = mm, thresh = 1e-18, lambda = 0))
   ## Define the design matrix for the factorial regression model.
-  geFormula <- as.formula(paste0("yRes ~ -1 +",
+  geFormulaTrain <- as.formula(paste0("yRes ~ -1 +",
                                  paste(paste0(indices, ":G"),
                                        collapse = " + ")))
   ## Construct design matrix for training set.
-  m <- Matrix::sparse.model.matrix(geFormula, data = dTrain)
+  mTrain <- Matrix::sparse.model.matrix(geFormulaTrain, data = dTrain)
   if (!is.null(testEnv)) {
     ## Construct design matrix for test set.
-    geFormula <- as.formula(paste0(" ~ -1 + ",
-                                   paste(paste0(indices, ":G"),
-                                         collapse = " + ")))
-    mTest <- Matrix::sparse.model.matrix(geFormula, data = dTest)
+    geFormulaTest <- update(geFormulaTrain, new =  NULL ~ .)
+    mTest <- Matrix::sparse.model.matrix(geFormulaTest, data = dTest)
   }
   predTrain <- rep(NA, nrow(dTrain))
   names(predTrain) <- rownames(dTrain)
@@ -197,8 +198,6 @@ perGeno <- function(dat,
   } else {
     predTest <- NULL
   }
-  sdTr <- muTr <- rep(NA, ncol(m))
-  names(sdTr) <- names(muTr) <- colnames(m)
   nIndices <- length(indices)
   ## Create a data.frame that will contain the estimated genotypic
   ## main effects (first column), and the estimated environmental
@@ -206,69 +205,59 @@ perGeno <- function(dat,
   parGeno <- matrix(nrow = nGenoTrain, ncol = nIndices + 1,
                     dimnames = list(levels(dTrain$G), c("main", indices)))
   parGeno <- as.data.frame(parGeno)
-  lambdaOpt <- rep(NA, nlevels(dTrain$G))
-  names(lambdaOpt) <- levels(dTrain$G)
+  lambdaOpt <- setNames(rep(NA, nGenoTrain), levels(dTrain$G))
   for (gg in levels(dTrain$G)) {
     ggInd <- which(levels(dTrain$G) == gg)
-    cat(ggInd / length(levels(dTrain$G)), "\n")
-    cn <- ggInd + (0:(nIndices - 1)) * nlevels(dTrain$G)
-    scn <- (colnames(m))[cn]
+    cn <- ggInd + (0:(nIndices - 1)) * nGenoTrain
+    scn <- colnames(mTrain)[cn]
     gnInd <- which(dTrain$G == gg)
-    mgg <- m[gnInd, scn, drop = FALSE]
-    mugg <- colMeans(mgg)
-    sdgg <- apply(X = mgg, MARGIN = 2, FUN = sd)
-    muTr[scn] <- mugg
-    sdTr[scn] <- sdgg
-    m[gnInd, scn] <- scale(mgg, center = mugg, scale = sdgg)
+    mgg <- mTrain[gnInd, scn, drop = FALSE]
+    mTrainGeno <- scale(mgg)
     if (useRes) {
       yTemp <- dTrain$yRes[gnInd]
     } else {
       yTemp <- dTrain$Y[gnInd]
     }
-    glmnetOut <- glmnet::cv.glmnet(x = as.matrix(m[gnInd, scn, drop = FALSE]),
+    glmnetOut <- glmnet::cv.glmnet(x = mTrainGeno,
                                    y = yTemp,
                                    weights = dTrain$W[gnInd],
                                    foldid = foldid[gnInd],
                                    nfolds = nfolds,
                                    standardize = TRUE,
                                    intercept = TRUE,
-                                   alpha = alpha)
+                                   alpha = alpha,
+                                   grouped = max(table(foldid[gnInd])) > 2)
     lambda <- glmnetOut$lambda
-    lambdaSequence <- lambda
     lambdaIndex <- which(lambda == glmnetOut$lambda.min)
     cfe <- as.numeric(glmnetOut$glmnet.fit$beta[, lambdaIndex])
     mu <- as.numeric(glmnetOut$glmnet.fit$a0[lambdaIndex])
     parGeno[ggInd, ] <- c(mu, cfe)
     lambdaOpt[ggInd] <- glmnetOut$lambda.min
     predTrain[gnInd] <- as.numeric(predict(object = glmnetOut,
-                                           newx = as.matrix(m[gnInd, scn]),
+                                           newx = mTrainGeno,
                                            s = "lambda.min"))
     if (useRes) {
-      predTrain[gnInd] <- predTrain[gnInd]  + mainOnly[gg]
+      predTrain[gnInd] <- predTrain[gnInd] + genoMain[gg]
     }
-    # labels predTest/Tr correct ?
-    if (!is.null(testEnv) & (gg %in% as.character(dTest$G))) {
-      mggTest <- as.matrix(mTest[which(dTest$G == gg), scn, drop = FALSE])
-      mTest[which(dTest$G == gg), scn] <-
-        scale(mggTest, center = mugg, scale = sdgg)
+    ## Predictions for test set.
+    if (!is.null(testEnv) && gg %in% levels(dTest$G)) {
+      mugg <- Matrix::colMeans(mgg)
+      sdgg <- apply(X = mgg, MARGIN = 2, FUN = sd)
+      mggTest <- mTest[dTest$G == gg, scn, drop = FALSE]
+      mTest[dTest$G == gg, scn] <- scale(mggTest, center = mugg, scale = sdgg)
       glmnetPred  <- as.numeric(predict(object = glmnetOut,
                                         newx = mTest[dTest$G == gg,
                                                      scn, drop = FALSE],
                                         s = "lambda.min"))
-      predTest[which(dTest$G == gg)] <- glmnetPred
+      predTest[dTest$G == gg] <- glmnetPred
       if (useRes) {
-        predTest[which(dTest$G == gg)] <-
-          predTest[which(dTest$G == gg)] + mainOnly[gg]
+        predTest[dTest$G == gg] <- predTest[dTest$G == gg] + genoMain[gg]
       }
     }
   }
   ## Compute the mean of each environmental index, in each environment
   indFrame <- aggregate(dat[, indices], by = list(E = dat$E), FUN = mean)
-  rownames(indFrame) <- indFrame$E
   indFrameTrain <- indFrame[indFrame$E %in% trainEnv, ]
-  if (!is.null(testEnv)) {
-    indFrameTest  <- indFrame[indFrame$E %in% testEnv, ]
-  }
   indFrameTrain <- merge(indFrameTrain, envMain, by.x = "E", by.y = "row.names")
   colnames(indFrameTrain)[ncol(indFrameTrain)] <- "envMainFitted"
   indFrameTrain <- merge(indFrameTrain, partition)
@@ -276,16 +265,18 @@ perGeno <- function(dat,
   glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
                                  y = indFrameTrain$envMainFitted,
                                  alpha = alpha,
-                                 foldid = indFrameTrain$partition)
+                                 foldid = indFrameTrain$partition,
+                                 grouped = max(table(indFrameTrain$partition)) > 2)
   parEnvTrain <- predict(object = glmnetOut,
                          newx = as.matrix(indFrameTrain[, indices]),
                          s = "lambda.min")
   if (!is.null(testEnv)) {
+    indFrameTest <- indFrame[indFrame$E %in% testEnv, ]
+    rownames(indFrameTest) <- indFrameTest$E
     parEnvTest  <- predict(object = glmnetOut,
                            newx = as.matrix(indFrameTest[, indices]),
                            s = "lambda.min")
   }
-  indicesTest <- NULL
   ## add the predicted environmental main effects:
   predTrain <- predTrain + as.numeric(parEnvTrain[as.character(dTrain$E), ])
   indicesTrain <- data.frame(indFrameTrain,
@@ -297,7 +288,7 @@ perGeno <- function(dat,
                               envMainPred = as.numeric(parEnvTest))
   }
   ## Compute statistics for training data.
-  predMain <- mainOnly[as.character(dTrain$G)]
+  predMain <- genoMain[as.character(dTrain$G)]
   trainAccuracyEnv <- getAccuracyEnv(datNew = dTrain[, "Y"],
                                      datPred = predTrain,
                                      datPredMain = predMain,
@@ -311,7 +302,7 @@ perGeno <- function(dat,
                                        corType = corType)
   if (!is.null(testEnv)) {
     ## Compute statistics for test data.
-    predMainTest <- mainOnly[as.character(dTest$G)]
+    predMainTest <- genoMain[as.character(dTest$G)]
     testAccuracyEnv <- getAccuracyEnv(datNew = dTest[, "Y"],
                                       datPred = predTest,
                                       datPredMain = predMainTest,
@@ -324,6 +315,7 @@ perGeno <- function(dat,
                                         datG = dTest[, "G"],
                                         corType = corType)
   } else {
+    indicesTest <- NULL
     testAccuracyEnv  <- NULL
     testAccuracyGeno <- NULL
   }
@@ -356,7 +348,6 @@ perGeno <- function(dat,
   }
   # needed for use in nGnE
   quadratic <- FALSE
-  # to do: quadratic terms in perGeno
   ## Create output object.
   out <- list(predTrain = predTrain,
               predTest = predTest,
