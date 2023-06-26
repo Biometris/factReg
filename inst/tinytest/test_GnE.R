@@ -8,7 +8,7 @@ drops_GE_GnE <- rbind(drops_GE[, -c(2, 3, 5)], drops_GnE[, -c(2, 3, 5)])
 
 ## Restrict to 10 genotypes.
 testDat <- drops_GE_GnE[drops_GE_GnE$Variety_ID %in%
-                               levels(drops_GE_GnE$Variety_ID)[1:10], ]
+                          levels(drops_GE_GnE$Variety_ID)[1:10], ]
 testDat <- droplevels(testDat)
 
 testK <- drops_K[levels(testDat$Variety_ID), levels(testDat$Variety_ID)]
@@ -107,10 +107,42 @@ expect_warning(GnE(dat = testDat[!testDat$Experiment %in% c("Gai12W", "Gai13R"),
                    E = "Experiment", indices = indices),
                "the following genotypes have < 10 observations, and are removed")
 expect_error(GnE(dat = testDat[!testDat$Experiment %in% c("Gai12W", "Gai13R"), ],
-                   Y = "grain.yield", G = "Variety_ID",
-                   E = "Experiment", indices = indices),
-               "No data left in training set")
+                 Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices),
+             "No data left in training set")
 
 
+## Check that specifying lambda works correctly.
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, lambda = "a"),
+             "lambda should be a numeric vector")
+
+modLambda <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, lambda = modBase$lambda)
+expect_equal(modLambda$lambda, modBase$lambda)
+expect_equal(modLambda$lambdaSequence, modBase$lambda)
 
 
+## Check that option quadratic works correctly.
+modQuad <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+               E = "Experiment", indices = indices, lambda = modBase$lambda,
+               quadratic = TRUE)
+expect_equal(modQuad$indices, c("Tnight.Early", "Tnight.Flo",
+                                "Tnight.Early_quad", "Tnight.Flo_quad"))
+expect_equal(mean(modQuad$trainAccuracyEnv$r), 0.898854022315224)
+
+
+## Check that option K works correctly.
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, lambda = modBase$lambda,
+                 K = 1),
+             "K should be a matrix with all genotypes in dat in its row")
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, lambda = modBase$lambda,
+                 K = testK[1:3, 1:3]),
+             "K should be a matrix with all genotypes in dat in its row")
+
+modK <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+            E = "Experiment", indices = indices, lambda = modBase$lambda,
+            K = testK)
+expect_equal(mean(modK$trainAccuracyEnv$r), 0.75100036563115)

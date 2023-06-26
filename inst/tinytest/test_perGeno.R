@@ -110,3 +110,12 @@ expect_error(perGeno(dat = testDat[!testDat$Experiment %in% c("Gai12W", "Gai13R"
                      Y = "grain.yield", G = "Variety_ID",
                      E = "Experiment", indices = indices),
              "No data left in training set")
+
+
+## Check that option quadratic works correctly.
+modQuad <- perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                   E = "Experiment", indices = indices, quadratic = TRUE)
+expect_equal(modQuad$indices, c("Tnight.Early", "Tnight.Flo",
+                                "Tnight.Early_quad", "Tnight.Flo_quad"))
+expect_equal(mean(modQuad$trainAccuracyEnv$r), 0.883214087481033)
+
