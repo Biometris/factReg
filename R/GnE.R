@@ -205,7 +205,7 @@ GnE <- function(dat,
                 outputFile = NULL,
                 corType = c("pearson", "spearman"),
                 partition = data.frame(),
-                nfolds = NULL,
+                nfolds = 10,
                 alpha = 1,
                 lambda = NULL,
                 penG = 0,
@@ -325,12 +325,24 @@ GnE <- function(dat,
   ## When partition == data.frame() (the default),
   ## do leave one environment out cross-validation.
   if (!is.null(partition)) {
+    if (!inherits(partition, "data.frame")) {
+      stop("partition should be a data.frame.\n")
+    }
     if (ncol(partition) == 0) {
       partition <- unique(data.frame(E = dTrain$E,
                                      partition = as.numeric(dTrain$E)))
     } else {
-      stopifnot(all(c("E", "partition") %in% colnames(partition)))
-      stopifnot(all(dTrain$E %in% partition$E))
+      if (!setequal(colnames(partition), c("E", "partition"))) {
+        stop("partition should have columns E and partition.\n")
+      }
+      if (!is.numeric(partition$partition) ||
+          length(unique(partition$partition)) < 4) {
+        stop("Column partition in partition should be a numeric column with",
+             "at least 4 different values.\n")
+      }
+      if (!all(levels(dTrain$E) %in% partition$E)) {
+        stop("All training environments should be in partition.\n")
+      }
       partition <- partition[partition$E %in% trainEnv, ]
     }
     ## Construct foldid from partition
@@ -339,7 +351,9 @@ GnE <- function(dat,
     nfolds <- length(unique(foldid))
   } else {
     foldid <- NULL
-    if (is.null(nfolds)) nfolds <- 10
+    if (!is.numeric(nfolds) || length(nfolds) > 1 || nfolds < 4) {
+      stop("nfolds should be a numeric value of 4 or more.\n")
+    }
   }
   mm <- Matrix::sparse.model.matrix(Y ~ E + G, data = dTrain)
   modelMain <- glmnet::glmnet(y = dTrain$Y, x = mm, thresh = 1e-18, lambda = 0)
@@ -403,6 +417,7 @@ GnE <- function(dat,
                                     foldid = foldid, nfolds = nfolds,
                                     alpha = alpha, standardize = TRUE,
                                     penalty.factor = penaltyFactorA,
+                                    grouped = nrow(dTrain) / nfolds >= 3,
                                     intercept = TRUE)
     lambda <- glmnetOutA$lambda
     lambdaSequence <- lambda
@@ -500,10 +515,12 @@ GnE <- function(dat,
   if (is.null(partition)) {
     glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
                                    y = indFrameTrain$envMainFitted,
-                                   alpha = alpha, nfolds = nfolds)
+                                   alpha = alpha, nfolds = nfolds,
+                                   grouped = nrow(dTrain) / nfolds < 3)
     glmnetOut2 <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain2[, indices]),
                                     y = indFrameTrain2$envMainFitted,
-                                    alpha = alpha, nfolds = nfolds)
+                                    alpha = alpha, nfolds = nfolds,
+                                    grouped = nrow(dTrain) / nfolds < 3)
   } else {
     glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
                                    y = indFrameTrain$envMainFitted,

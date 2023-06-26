@@ -18,7 +18,7 @@ perGeno(
   outputFile = NULL,
   corType = c("pearson", "spearman"),
   partition = data.frame(),
-  nfolds = NULL,
+  nfolds = 10,
   alpha = 1,
   scaling = c("train", "all", "no"),
   quadratic = FALSE,

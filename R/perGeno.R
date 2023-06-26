@@ -66,7 +66,7 @@ perGeno <- function(dat,
                     outputFile = NULL,
                     corType = c("pearson", "spearman"),
                     partition = data.frame(),
-                    nfolds = NULL,
+                    nfolds = 10,
                     alpha = 1,
                     scaling = c("train", "all", "no"),
                     quadratic = FALSE,
@@ -169,12 +169,24 @@ perGeno <- function(dat,
   ## When partition == data.frame() (the default),
   ## do leave one environment out cross-validation.
   if (!is.null(partition)) {
+    if (!inherits(partition, "data.frame")) {
+      stop("partition should be a data.frame.\n")
+    }
     if (ncol(partition) == 0) {
       partition <- unique(data.frame(E = dTrain$E,
                                      partition = as.numeric(dTrain$E)))
     } else {
-      stopifnot(all(c("E", "partition") %in% colnames(partition)))
-      stopifnot(all(dTrain$E %in% partition$E))
+      if (!setequal(colnames(partition), c("E", "partition"))) {
+        stop("partition should have columns E and partition.\n")
+      }
+      if (!is.numeric(partition$partition) ||
+          length(unique(partition$partition)) < 4) {
+        stop("Column partition in partition should be a numeric column with",
+             "at least 4 different values.\n")
+      }
+      if (!all(levels(dTrain$E) %in% partition$E)) {
+        stop("All training environments should be in partition.\n")
+      }
       partition <- partition[partition$E %in% trainEnv, ]
     }
     ## Construct foldid from partition
@@ -183,7 +195,9 @@ perGeno <- function(dat,
     nfolds <- length(unique(foldid))
   } else {
     foldid <- NULL
-    if (is.null(nfolds)) nfolds <- 10
+    if (!is.numeric(nfolds) || length(nfolds) > 1 || nfolds < 4) {
+      stop("nfolds should be a numeric value of 4 or more.\n")
+    }
   }
   mm <- Matrix::sparse.model.matrix(Y ~ E + G, data = dTrain)
   modelMain <- glmnet::glmnet(y = dTrain$Y, x = mm, thresh = 1e-18, lambda = 0)
@@ -238,15 +252,18 @@ perGeno <- function(dat,
     } else {
       yTemp <- dTrain$Y[gnInd]
     }
-    glmnetOut <- glmnet::cv.glmnet(x = mTrainGeno,
-                                   y = yTemp,
-                                   weights = dTrain$W[gnInd],
-                                   foldid = foldid[gnInd],
-                                   nfolds = nfolds,
-                                   standardize = TRUE,
-                                   intercept = TRUE,
-                                   alpha = alpha,
-                                   grouped = max(table(foldid[gnInd])) > 2)
+    grouped <- if (!is.null(foldid)) max(table(foldid[gnInd])) > 2 else
+      length(yTemp) / nfolds >= 3
+    glmnetOut <-
+      glmnet::cv.glmnet(x = mTrainGeno,
+                        y = yTemp,
+                        weights = dTrain$W[gnInd],
+                        foldid = if (!is.null(foldid)) foldid[gnInd],
+                        nfolds = nfolds,
+                        standardize = TRUE,
+                        intercept = TRUE,
+                        alpha = alpha,
+                        grouped = grouped)
     lambda <- glmnetOut$lambda
     lambdaIndex <- which(lambda == glmnetOut$lambda.min)
     cfe <- as.numeric(glmnetOut$glmnet.fit$beta[, lambdaIndex])
@@ -280,13 +297,15 @@ perGeno <- function(dat,
   indFrameTrain <- indFrame[indFrame$E %in% trainEnv, ]
   indFrameTrain <- merge(indFrameTrain, envMain, by.x = "E", by.y = "row.names")
   colnames(indFrameTrain)[ncol(indFrameTrain)] <- "envMainFitted"
-  indFrameTrain <- merge(indFrameTrain, partition)
+  if (!is.null(partition)) {
+    indFrameTrain <- merge(indFrameTrain, partition)
+  }
   rownames(indFrameTrain) <- indFrameTrain$E
   glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
                                  y = indFrameTrain$envMainFitted,
                                  alpha = alpha,
                                  foldid = indFrameTrain$partition,
-                                 grouped = max(table(indFrameTrain$partition)) > 2)
+                                 grouped = nrow(indFrameTrain) / nfolds >= 3)
   parEnvTrain <- predict(object = glmnetOut,
                          newx = as.matrix(indFrameTrain[, indices]),
                          s = "lambda.min")

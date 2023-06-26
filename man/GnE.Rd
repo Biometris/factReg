@@ -17,7 +17,7 @@ GnE(
   outputFile = NULL,
   corType = c("pearson", "spearman"),
   partition = data.frame(),
-  nfolds = NULL,
+  nfolds = 10,
   alpha = 1,
   lambda = NULL,
   penG = 0,
