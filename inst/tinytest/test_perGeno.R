@@ -1,3 +1,6 @@
+## Set seed.
+set.seed(1234)
+
 ## load the data.
 data(drops_GE)
 data(drops_GnE)
@@ -19,11 +22,16 @@ testK <- drops_K[levels(testDat$Variety_ID), levels(testDat$Variety_ID)]
 testDat <- testDat[testDat$Experiment %in% levels(testDat$Experiment)[1:11], ]
 testDat <- droplevels(testDat)
 
+## Select indices and create indicesDat for testing.
 indices <- c("Tnight.Early", "Tnight.Flo")
 
 indicesDat <- testDat[testDat$Variety_ID == "A3",
                       c("Tnight.Early", "Tnight.Flo")]
 rownames(indicesDat) <- substring(rownames(indicesDat), first = 1, last = 6)
+
+## Create partionDat.
+partitionDat <- data.frame(E = levels(testDat$Experiment), partition = 1:11)
+
 
 ### Check that input checks work as expected.
 expect_error(perGeno(dat = 1, Y = 1, G = 1, E = 1),
@@ -124,5 +132,53 @@ expect_equal(mean(modQuad$trainAccuracyEnv$r), 0.883214087481033)
 modAll <- perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                   E = "Experiment", indices = indices, scaling = "all")
 expect_equal(mean(modAll$trainAccuracyEnv$r), 0.759325616512526)
+
+
+## Check that option partition works correctly.
+partitionDatNonnum <- partitionDat
+partitionDatNonnum$partition <- as.character(partitionDatNonnum$partition)
+partitionDatFewFolds <- partitionDat
+partitionDatFewFolds$partition <- 1
+
+expect_error(perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                     E = "Experiment", indices = indices, partition = 1),
+             "partition should be a data.frame")
+expect_error(perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                     E = "Experiment", indices = indices,
+                     partition = partitionDat[, 1, drop = FALSE]),
+             "partition should have columns E and partition")
+expect_error(perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                     E = "Experiment", indices = indices,
+                     partition = partitionDatNonnum),
+             "Column partition in partition should be a numeric column with")
+expect_error(perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                     E = "Experiment", indices = indices,
+                     partition = partitionDatFewFolds),
+             "Column partition in partition should be a numeric column with")
+expect_error(perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                     E = "Experiment", indices = indices,
+                     partition = partitionDat[-1, ]),
+             "All training environments should be in partition")
+
+modPart <- perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                   E = "Experiment", indices = indices,
+                   partition = partitionDat)
+
+expect_equal(mean(modPart$trainAccuracyEnv$r), 0.759325616512526)
+
+expect_error(perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                     E = "Experiment", indices = indices,
+                     partition = NULL, nfolds = "a"),
+             "nfolds should be a numeric value of 4 or more")
+expect_error(perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                     E = "Experiment", indices = indices,
+                     partition = NULL, nfolds = 3),
+             "nfolds should be a numeric value of 4 or more")
+
+modPartNULL <- perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                       E = "Experiment", indices = indices,
+                       partition = NULL, nfolds = 4)
+
+expect_equal(mean(modPartNULL$trainAccuracyEnv$r), 0.7574933541357)
 
 

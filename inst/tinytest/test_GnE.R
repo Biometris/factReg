@@ -1,3 +1,6 @@
+## Set seed.
+set.seed(1234)
+
 ## load the data.
 data(drops_GE)
 data(drops_GnE)
@@ -19,11 +22,16 @@ testK <- drops_K[levels(testDat$Variety_ID), levels(testDat$Variety_ID)]
 testDat <- testDat[testDat$Experiment %in% levels(testDat$Experiment)[1:11], ]
 testDat <- droplevels(testDat)
 
+## Select indices and create indicesDat for testing.
 indices <- c("Tnight.Early", "Tnight.Flo")
 
 indicesDat <- testDat[testDat$Variety_ID == "A3",
                       c("Tnight.Early", "Tnight.Flo")]
 rownames(indicesDat) <- substring(rownames(indicesDat), first = 1, last = 6)
+
+## Create partionDat.
+partitionDat <- data.frame(E = levels(testDat$Experiment), partition = 1:11)
+
 
 ### Check that input checks work as expected.
 expect_error(GnE(dat = 1, Y = 1, G = 1, E = 1),
@@ -153,4 +161,53 @@ modAll <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
               E = "Experiment", indices = indices, lambda = modBase$lambda,
               scaling = "all")
 expect_equal(mean(modAll$trainAccuracyEnv$r), 0.791322119880585)
+
+
+## Check that option partition works correctly.
+partitionDatNonnum <- partitionDat
+partitionDatNonnum$partition <- as.character(partitionDatNonnum$partition)
+partitionDatFewFolds <- partitionDat
+partitionDatFewFolds$partition <- 1
+
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, lambda = modBase$lambda,
+                 partition = 1),
+             "partition should be a data.frame")
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, lambda = modBase$lambda,
+                 partition = partitionDat[, 1, drop = FALSE]),
+             "partition should have columns E and partition")
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, lambda = modBase$lambda,
+                 partition = partitionDatNonnum),
+             "Column partition in partition should be a numeric column with")
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, lambda = modBase$lambda,
+                 partition = partitionDatFewFolds),
+             "Column partition in partition should be a numeric column with")
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, lambda = modBase$lambda,
+                 partition = partitionDat[-1, ]),
+             "All training environments should be in partition")
+
+modPart <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+               E = "Experiment", indices = indices, lambda = modBase$lambda,
+               partition = partitionDat)
+
+expect_equal(mean(modPart$trainAccuracyEnv$r), 0.791322119880585)
+
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, lambda = modBase$lambda,
+                 partition = NULL, nfolds = "a"),
+             "nfolds should be a numeric value of 4 or more")
+expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                 E = "Experiment", indices = indices, lambda = modBase$lambda,
+                 partition = NULL, nfolds = 3),
+             "nfolds should be a numeric value of 4 or more")
+
+modPartNULL <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                   E = "Experiment", indices = indices, lambda = modBase$lambda,
+                   partition = NULL, nfolds = 4)
+
+expect_equal(mean(modPartNULL$trainAccuracyEnv$r), 0.791322119880585)
 
