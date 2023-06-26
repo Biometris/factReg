@@ -228,6 +228,9 @@ GnE <- function(dat,
   if (is.null(lambda)) {
     lambdaProvided <- FALSE
   } else {
+    if (!is.numeric(lambda)) {
+      stop("lambda should be a numeric vector.\n")
+    }
     lambdaProvided <- TRUE
     lambda <- sort(lambda, decreasing = TRUE)
   }
@@ -265,7 +268,11 @@ GnE <- function(dat,
   }
   ## Check kinship.
   if (!is.null(K)) {
-    stopifnot(all(dat$genotypes %in% colnames(K)))
+    if (!is.matrix(K) || !setequal(levels(dat$G), colnames(K)) ||
+        !setequal(levels(dat$G), rownames(K))) {
+      stop("K should be a matrix with all genotypes in dat in its row and ",
+           "column names.\n")
+    }
   }
   ## Get training envs.
   trainEnv <- setdiff(levels(dat$E), testEnv)
@@ -333,7 +340,7 @@ GnE <- function(dat,
     nfolds <- length(unique(foldid))
   } else {
     foldid <- NULL
-    if (is.null(nfolds)) {nfolds <- 10}
+    if (is.null(nfolds)) nfolds <- 10
   }
   mm <- Matrix::sparse.model.matrix(Y ~ E + G, data = dTrain)
   modelMain <- glmnet::glmnet(y = dTrain$Y, x = mm, thresh = 1e-18, lambda = 0)
@@ -490,7 +497,6 @@ GnE <- function(dat,
   rownames(indFrameTrain) <- indFrameTrain$E
   rownames(indFrameTrain2) <- indFrameTrain2$E
   ## predict env. main effects.
-  ## (to do : quadratic terms. NO post-LASSO ?)
   ## note : parEnvTrain and parEnvTest will now be matrices; not vectors.
   if (is.null(partition)) {
     glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices, drop = FALSE]),
