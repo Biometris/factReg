@@ -19,9 +19,10 @@ perGeno(
   corType = c("pearson", "spearman"),
   partition = data.frame(),
   nfolds = NULL,
+  alpha = 1,
   scaling = c("train", "all", "no"),
-  verbose = FALSE,
-  alpha = 1
+  quadratic = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -88,17 +89,20 @@ case, the number of folds (nfolds) can be specified.}
 \item{nfolds}{Default \code{NULL}. If \code{partition == NULL}, this can be
 used to specify the number of folds to be used in glmnet.}
 
+\item{alpha}{Type of penalty, as in glmnet (1 = LASSO, 0 = ridge; in between
+= elastic net). Default is 1.}
+
 \item{scaling}{determines how the environmental variables are scaled.
 "train" : all data (test and training environments) are scaled
 using the mean and and standard deviation in the training environments.
 "all" : using the mean and standard deviation of all environments.
 "no" : No scaling.}
 
+\item{quadratic}{boolean; default \code{FALSE}. If \code{TRUE}, quadratic
+terms (i.e., squared indices) are added to the model.}
+
 \item{verbose}{boolean; default \code{FALSE}. If \code{TRUE}, the accuracies
 per environment are printed on screen.}
-
-\item{alpha}{Type of penalty, as in glmnet (1 = LASSO, 0 = ridge; in between
-= elastic net). Default is 1.}
 }
 \value{
 A list with the following elements:
@@ -137,7 +141,7 @@ used}
 was used}
 \item{lambdaOpt}{}
 \item{pargeno}{}
-\item{quadratic}{}
+\item{quadratic}{The quadratic option that was used}
 }
 }
 \description{

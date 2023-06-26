@@ -50,7 +50,7 @@
 #'   was used}
 #'   \item{lambdaOpt}{}
 #'   \item{pargeno}{}
-#'   \item{quadratic}{}
+#'   \item{quadratic}{The quadratic option that was used}
 #' }
 #'
 #' @export
@@ -67,9 +67,10 @@ perGeno <- function(dat,
                     corType = c("pearson", "spearman"),
                     partition = data.frame(),
                     nfolds = NULL,
+                    alpha = 1,
                     scaling = c("train", "all", "no"),
-                    verbose = FALSE,
-                    alpha = 1) {
+                    quadratic = FALSE,
+                    verbose = FALSE) {
   ## Input checks.
   if (!inherits(dat, "data.frame")) {
     stop("dat should be a data.frame.\n")
@@ -130,6 +131,14 @@ perGeno <- function(dat,
     dat[, indices] <- scale(dat[, indices], center = muTr, scale = sdTr)
   } else if (scaling == "all") {
     dat[, indices] <- scale(dat[, indices])
+  }
+  if (quadratic) {
+    ## Add quadratic environmental columns to data.
+    datIndQuad <- dat[, indices]^2
+    colnames(datIndQuad) <- paste0(indices, "_quad")
+    dat <- cbind(dat, datIndQuad)
+    ## Add the quadratic columns to the indices.
+    indices <- c(indices, paste0(indices, "_quad"))
   }
   if (is.null(weight)) {
     dat$W <- 1
@@ -192,13 +201,13 @@ perGeno <- function(dat,
     as.numeric(predict(modelMain, newx = mm, thresh = 1e-18, lambda = 0))
   ## Define the design matrix for the factorial regression model.
   geFormulaTrain <- as.formula(paste0("yRes ~ -1 +",
-                                 paste(paste0(indices, ":G"),
-                                       collapse = " + ")))
+                                      paste(paste0(indices, ":G"),
+                                            collapse = " + ")))
   ## Construct design matrix for training set.
   mTrain <- Matrix::sparse.model.matrix(geFormulaTrain, data = dTrain)
   if (!is.null(testEnv)) {
     ## Construct design matrix for test set.
-    geFormulaTest <- update(geFormulaTrain, new =  NULL ~ .)
+    geFormulaTest <- update(geFormulaTrain, new = NULL ~ .)
     mTest <- Matrix::sparse.model.matrix(geFormulaTest, data = dTest)
   }
   predTrain <- rep(NA, nrow(dTrain))
@@ -256,10 +265,10 @@ perGeno <- function(dat,
       sdgg <- apply(X = mgg, MARGIN = 2, FUN = sd)
       mggTest <- mTest[dTest$G == gg, scn, drop = FALSE]
       mTest[dTest$G == gg, scn] <- scale(mggTest, center = mugg, scale = sdgg)
-      glmnetPred  <- as.numeric(predict(object = glmnetOut,
-                                        newx = mTest[dTest$G == gg,
-                                                     scn, drop = FALSE],
-                                        s = "lambda.min"))
+      glmnetPred <- as.numeric(predict(object = glmnetOut,
+                                       newx = mTest[dTest$G == gg,
+                                                    scn, drop = FALSE],
+                                       s = "lambda.min"))
       predTest[dTest$G == gg] <- glmnetPred
       if (useRes) {
         predTest[dTest$G == gg] <- predTest[dTest$G == gg] + genoMain[gg]
@@ -357,8 +366,6 @@ perGeno <- function(dat,
     cat("\n\n", "Training environments (", traitName,")", "\n\n")
     print(format(trainAccuracyEnv, digits = 2, nsmall = 2))
   }
-  # needed for use in nGnE
-  quadratic <- FALSE
   ## Create output object.
   out <- list(predTrain = predTrain,
               predTest = predTest,
