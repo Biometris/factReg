@@ -287,12 +287,11 @@ GnE <- function(dat,
   }
   ## Scale environmental variables.
   if (scaling == "train") {
-    muTr <- colMeans(dat[dat$E %in% trainEnv, indices, drop = FALSE])
-    sdTr <- sapply(X = dat[dat$E %in% trainEnv, indices, drop = FALSE], sd)
-    dat[, indices] <- scale(dat[, indices, drop = FALSE], center = muTr,
-                            scale = sdTr)
+    muTr <- colMeans(dat[dat$E %in% trainEnv, indices])
+    sdTr <- sapply(X = dat[dat$E %in% trainEnv, indices], sd)
+    dat[, indices] <- scale(dat[, indices], center = muTr, scale = sdTr)
   } else if (scaling == "all") {
-    dat[, indices, drop = FALSE] <- scale(dat[, indices, drop = FALSE])
+    dat[, indices] <- scale(dat[, indices])
   }
   if (is.null(weight)) {
     dat$W <- 1
@@ -469,7 +468,7 @@ GnE <- function(dat,
   }
   ## Compute the mean of each environmental index, in each environment
   if (!quadratic) {
-    indFrame <- aggregate(dat[, indices, drop = FALSE],
+    indFrame <- aggregate(dat[, indices],
                           by = list(E = dat$E), FUN = mean)
   } else {
     indFrame <- merge(aggregate(dat[, indices[1:(length(indices) / 2)],
@@ -499,33 +498,33 @@ GnE <- function(dat,
   ## predict env. main effects.
   ## note : parEnvTrain and parEnvTest will now be matrices; not vectors.
   if (is.null(partition)) {
-    glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices, drop = FALSE]),
+    glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
                                    y = indFrameTrain$envMainFitted,
                                    alpha = alpha, nfolds = nfolds)
-    glmnetOut2 <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain2[, indices, drop = FALSE]),
+    glmnetOut2 <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain2[, indices]),
                                     y = indFrameTrain2$envMainFitted,
                                     alpha = alpha, nfolds = nfolds)
   } else {
-    glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices, drop = FALSE]),
+    glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
                                    y = indFrameTrain$envMainFitted,
                                    alpha = alpha,
                                    foldid = indFrameTrain$partition,
                                    grouped = max(table(indFrameTrain$partition)) > 2)
-    glmnetOut2 <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain2[, indices, drop = FALSE]),
+    glmnetOut2 <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain2[, indices]),
                                     y = indFrameTrain2$envMainFitted,
                                     alpha = alpha,
                                     foldid = indFrameTrain2$partition,
                                     grouped = max(table(indFrameTrain2$partition)) > 2)
   }
   parEnvTrain <- predict(object = glmnetOut,
-                         newx = as.matrix(indFrameTrain[, indices, drop = FALSE]),
+                         newx = as.matrix(indFrameTrain[, indices]),
                          s = "lambda.min")
   if (!is.null(testEnv)) {
     parEnvTest  <- predict(object = glmnetOut,
-                           newx = as.matrix(indFrameTest[, indices, drop = FALSE]),
+                           newx = as.matrix(indFrameTest[, indices]),
                            s = "lambda.min")
     parEnvTest2 <- predict(object = glmnetOut2,
-                           newx = as.matrix(indFrameTest[, indices, drop = FALSE]),
+                           newx = as.matrix(indFrameTest[, indices]),
                            s = "lambda.min")
   }
   indicesTest <- NULL
@@ -562,17 +561,17 @@ GnE <- function(dat,
                                       rank = TRUE)
     ##################
     if (is.null(partition)) {
-      glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices, drop = FALSE]),
+      glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
                                      y = trainAccuracyEnv$r, alpha = alpha,
                                      foldid = nfolds)
     } else {
-      glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices, drop = FALSE]),
+      glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
                                      y = trainAccuracyEnv$r, alpha = alpha,
                                      foldid = indFrameTrain$partition,
                                      grouped = max(table(indFrameTrain$partition)) > 2)
     }
     rTest  <- predict(object = glmnetOut,
-                      newx = as.matrix(indFrameTest[, indices, drop = FALSE]),
+                      newx = as.matrix(indFrameTest[, indices]),
                       s = "lambda.min")
     testAccuracyEnv$rEst <- as.numeric(rTest)
     ## Compute accuracies for genotypes.
