@@ -146,3 +146,11 @@ modK <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
             E = "Experiment", indices = indices, lambda = modBase$lambda,
             K = testK)
 expect_equal(mean(modK$trainAccuracyEnv$r), 0.75100036563115)
+
+
+## Check that option scale works correctly.
+modAll <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+              E = "Experiment", indices = indices, lambda = modBase$lambda,
+              scaling = "all")
+expect_equal(mean(modAll$trainAccuracyEnv$r), 0.791322119880585)
+

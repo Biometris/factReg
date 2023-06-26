@@ -119,3 +119,10 @@ expect_equal(modQuad$indices, c("Tnight.Early", "Tnight.Flo",
                                 "Tnight.Early_quad", "Tnight.Flo_quad"))
 expect_equal(mean(modQuad$trainAccuracyEnv$r), 0.883214087481033)
 
+
+## Check that option scale works correctly.
+modAll <- perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+                  E = "Experiment", indices = indices, scaling = "all")
+expect_equal(mean(modAll$trainAccuracyEnv$r), 0.759325616512526)
+
+
