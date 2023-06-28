@@ -306,6 +306,7 @@ GnE <- function(dat,
     warning("the following genotypes have < 10 observations, and are removed:",
             "\n\n", paste(redundantGeno, collapse = ", "), "\n")
     dTrain <- dTrain[!(dTrain$G %in% redundantGeno), ]
+    dat <- dat[!(dat$G %in% redundantGeno), ]
   }
   dTrain <- droplevels(dTrain)
   if (nrow(dTrain) == 0) {
