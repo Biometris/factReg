@@ -305,6 +305,14 @@ GnE <- function(dat,
     sdFull <- pmax(sapply(X = dat[, indices], sd), 1e-10)
     dat[, indices] <- scale(dat[, indices], scale = sdFull)
   }
+  if (quadratic) {
+    ## Add quadratic environmental columns to data.
+    datIndQuad <- dat[, indices]^2
+    colnames(datIndQuad) <- paste0(indices, "_quad")
+    dat <- cbind(dat, datIndQuad)
+    ## Add the quadratic columns to the indices.
+    indices <- c(indices, paste0(indices, "_quad"))
+  }
   if (is.null(weight)) {
     dat$W <- 1
   } else {
@@ -379,15 +387,6 @@ GnE <- function(dat,
   ma <- Matrix::sparse.model.matrix(geFormula, data = rbind(dTrain, dTest))
   colnames(ma)[1:(nEnv + nGenoTrain - 1)] <-
     substring(colnames(ma)[1:(nEnv + nGenoTrain - 1)], first = 2)
-  if (quadratic) {
-    ## Add quadratic columns to design matrix.
-    mQuad <- ma[, (nEnv + nGenoTrain):ncol(ma)] ^ 2
-    colnames(mQuad) <- paste0(colnames(mQuad), "_quad")
-    ma <- cbind(ma, mQuad)
-    ## Add the quadratic columns to the indices.
-    # from this point: only used to estimate env.main effects for test env.
-    indices <- c(indices, paste0(indices, "_quad"))
-  }
   # define the vector indicating to which extent parameters are to be penalized.
   penaltyFactorA <- rep(1, ncol(ma))
   penaltyFactorA[1:nEnv] <- penE
@@ -489,26 +488,13 @@ GnE <- function(dat,
     resTest <- NULL
   }
   ## Compute the mean of each environmental index, in each environment
-  if (!quadratic) {
-    indFrame <- aggregate(dat[, indices],
-                          by = list(E = dat$E), FUN = mean)
-  } else {
-    indFrame <- merge(aggregate(dat[, indices[1:(length(indices) / 2)],
-                                    drop = FALSE],
-                                by = list(E = dat$E), FUN = mean),
-                      aggregate(dat[, indices[1:(length(indices) / 2)],
-                                    drop = FALSE] ^ 2,
-                                by = list(E = dat$E), FUN = mean), by = "E")
-    colnames(indFrame)[-1] <- indices
-  }
+  indFrame <- aggregate(dat[, indices], by = list(E = dat$E), FUN = mean)
   rownames(indFrame) <- indFrame$E
-  indFrameTrain <- indFrame[indFrame$E %in% trainEnv, ]
-  if (!is.null(testEnv)) {
-    indFrameTest  <- indFrame[indFrame$E %in% testEnv, ]
-  }
-  indFrameTrain2 <- merge(indFrameTrain, envMain2,
-                          by.x = "E", by.y = "row.names")
+  indFrameTrain <- indFrame[trainEnv, ]
+  if (!is.null(testEnv)) indFrameTest  <- indFrame[testEnv, ]
   indFrameTrain <- merge(indFrameTrain, envMain, by.x = "E", by.y = "row.names")
+  indFrameTrain2 <- merge(indFrameTrain, envMain2, by.x = "E",
+                          by.y = "row.names")
   colnames(indFrameTrain)[ncol(indFrameTrain)] <- "envMainFitted"
   colnames(indFrameTrain2)[ncol(indFrameTrain2)] <- "envMainFitted"
   if (!is.null(partition)) {
