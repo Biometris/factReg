@@ -288,10 +288,13 @@ GnE <- function(dat,
   ## Scale environmental variables.
   if (scaling == "train") {
     muTr <- colMeans(dat[dat$E %in% trainEnv, indices])
-    sdTr <- sapply(X = dat[dat$E %in% trainEnv, indices], sd)
+    ## Scaling when sd = 0 is not possible. Use a very small value instead.
+    sdTr <- pmax(sapply(X = dat[dat$E %in% trainEnv, indices], sd), 1e-10)
     dat[, indices] <- scale(dat[, indices], center = muTr, scale = sdTr)
   } else if (scaling == "all") {
-    dat[, indices] <- scale(dat[, indices])
+    ## Scaling when sd = 0 is not possible. Use a very small value instead.
+    sdFull <- pmax(sapply(X = dat[, indices], sd), 1e-10)
+    dat[, indices] <- scale(dat[, indices], scale = sdFull)
   }
   if (is.null(weight)) {
     dat$W <- 1
