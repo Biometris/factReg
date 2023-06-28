@@ -200,7 +200,7 @@ data(drops_GE)
 data(drops_GnE)
 
 ## We remove identifiers that we don't need.
-drops_GE_GnE <- rbind(drops_GE[, -c(2, 3, 5)], drops_GnE[, -c(2, 3, 5)])
+drops_GE_GnE <- rbind(drops_GE[, -c(2, 4)], drops_GnE[, -c(2, 4)])
 
 ## Define indeces.
 ind <- colnames(drops_GE)[6:16]

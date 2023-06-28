@@ -7,7 +7,7 @@ data(drops_GnE)
 data(drops_K)
 
 ## Remove identifiers that we don't need.
-drops_GE_GnE <- rbind(drops_GE[, -c(2, 3, 5)], drops_GnE[, -c(2, 3, 5)])
+drops_GE_GnE <- rbind(drops_GE[, -c(2, 4)], drops_GnE[, -c(2, 4)])
 
 ## Restrict to 10 genotypes.
 testDat <- drops_GE_GnE[drops_GE_GnE$Variety_ID %in%
@@ -117,7 +117,7 @@ expect_warning(GnE(dat = testDat[!testDat$Experiment %in% c("Gai12W", "Gai13R"),
 expect_error(GnE(dat = testDat[!testDat$Experiment %in% c("Gai12W", "Gai13R"), ],
                  Y = "grain.yield", G = "Variety_ID",
                  E = "Experiment", indices = indices),
-             "No data left in training set")
+             "No data left after removing genotypes with < 10 observations")
 
 
 ## Check that specifying lambda works correctly.

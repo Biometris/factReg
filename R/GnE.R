@@ -153,7 +153,7 @@
 #' data(drops_GnE)
 #'
 #' ## We remove identifiers that we don't need.
-#' drops_GE_GnE <- rbind(drops_GE[, -c(2, 3, 5)], drops_GnE[, -c(2, 3, 5)])
+#' drops_GE_GnE <- rbind(drops_GE[, -c(2, 4)], drops_GnE[, -c(2, 4)])
 #'
 #' ## Define indeces.
 #' ind <- colnames(drops_GE)[6:16]
@@ -279,6 +279,16 @@ GnE <- function(dat,
   ## Remove missing values from training envs.
   dat <- dat[!(is.na(dat$Y) & dat$E %in% trainEnv), ]
   dat <- droplevels(dat)
+  redundantGeno <- names(which(table(dat$G[!is.na(dat$Y) &
+                                             dat$E %in% trainEnv]) < 10))
+  if (length(redundantGeno) > 0) {
+    warning("the following genotypes have < 10 observations, and are removed:",
+            "\n\n", paste(redundantGeno, collapse = ", "), "\n")
+    dat <- dat[!(dat$G %in% redundantGeno), ]
+    if (nrow(dat) == 0) {
+      stop("No data left after removing genotypes with < 10 observations.\n")
+    }
+  }
   if (!is.null(indicesData)) {
     indices <- colnames(indicesData)
     ## Remove columns from dat that are also in indices and then merge indices.
@@ -304,17 +314,7 @@ GnE <- function(dat,
   }
   ## Split dat into training and test set.
   dTrain <- dat[dat$E %in% trainEnv, ]
-  redundantGeno <- names(which(table(dTrain$G[!is.na(dTrain$Y)]) < 10))
-  if (length(redundantGeno) > 0) {
-    warning("the following genotypes have < 10 observations, and are removed:",
-            "\n\n", paste(redundantGeno, collapse = ", "), "\n")
-    dTrain <- dTrain[!(dTrain$G %in% redundantGeno), ]
-    dat <- dat[!(dat$G %in% redundantGeno), ]
-  }
   dTrain <- droplevels(dTrain)
-  if (nrow(dTrain) == 0) {
-    stop("No data left in training set.\n")
-  }
   if (!is.null(testEnv)) {
     dTest <- dat[dat$E %in% testEnv, ]
     dTest <- droplevels(dTest)
