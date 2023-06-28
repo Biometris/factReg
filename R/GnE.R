@@ -103,13 +103,12 @@
 #'
 #' @return A list with the following elements:
 #' \describe{
-#'   \item{predTrain}{Vector with predictions for the training set (to do: Add
-#'   the factors genotype and environment; make a data.frame)}
-#'   \item{predTest}{Vector with predictions for the test set (to do: Add the
-#'   factors genotype and environment; make a data.frame). To do: add estimated
-#'   environmental main effects, not only predicted environmental main effects}
-#'   \item{resTrain}{Vector with residuals for the training set}
-#'   \item{resTest}{Vector with residuals for the test set}
+#'   \item{predTrain}{A data.frame with predictions for the training set.}
+#'   \item{predTest}{A data.frame with predictions for the test set
+#'   To do: add estimated environmental main effects, not only predicted
+#'   environmental main effects}
+#'   \item{resTrain}{A data.frame with residuals for the training set}
+#'   \item{resTest}{A data.frame with residuals for the test set}
 #'   \item{mu}{the estimated overall (grand) mean}
 #'   \item{envInfoTrain}{The estimated environmental main effects, and the
 #'   predicted effects, obtained when the former are regressed on the averaged
@@ -119,18 +118,18 @@
 #'   main effects for the training environments and the averaged indices.}
 #'   \item{parGeno}{data.frame containing the estimated genotypic main effects
 #'   (first column) and sensitivities (subsequent columns)}
-#'   \item{trainAccuracyEnv}{a data-frame with the accuracy (r) for each
+#'   \item{trainAccuracyEnv}{a data.frame with the accuracy (r) for each
 #'   training environment, as well as the root mean square error (RMSE), mean
 #'   absolute deviation (MAD) and rank (the latter is a proportion: how many
 #'   of the best 5 genotypes are in the top 10). To be removed or further
 #'   developed. All these quantities are also evaluated for a model with only
 #'   genotypic and environmental main effects (columns rMain, RMSEMain and
 #'   rankMain).}
-#'   \item{testAccuracyEnv}{A data-frame with the accuracy for each test
+#'   \item{testAccuracyEnv}{A data.frame with the accuracy for each test
 #'   environment, with the same columns as trainAccuracyEnv.}
-#'   \item{trainAccuracyGeno}{a data-frame with the accuracy (r) for each
+#'   \item{trainAccuracyGeno}{a data.frame with the accuracy (r) for each
 #'   genotype, averaged over the training environments}
-#'   \item{testAccuracyGeno}{a data-frame with the accuracy (r) for each
+#'   \item{testAccuracyGeno}{a data.frame with the accuracy (r) for each
 #'   genotype, averaged over the test environments}
 #'   \item{lambda}{The value of lambda selected using cross validation.}
 #'   \item{lambdaSequence}{...}
@@ -474,13 +473,17 @@ GnE <- function(dat,
   ## Make predictions for training set.
   cfePred <- cfe[, lambdaIndex]
   cfePred[(nEnv + nGenoTrain):ncol(ma)] <- as.matrix(parGeno[, -1])
-  predTrain <- as.numeric(ma[1:nrow(dTrain), ] %*% cfePred + mu)
-  resTrain <- dTrain$Y - predTrain
+  predTrain <- data.frame(E = dTrain$E, G = dTrain$G,
+                          pred = as.numeric(ma[1:nrow(dTrain), ] %*% cfePred + mu))
+  resTrain <- data.frame(E = dTrain$E, G = dTrain$G,
+                         res = dTrain$Y - predTrain$pred)
   if (!is.null(testEnv)) {
     ## Make predictions for test set.
-    predTest <- as.numeric(ma[(nrow(dTrain)+ 1):(nrow(dTrain) + nrow(dTest)), ] %*%
-                             cfePred + mu)
-    resTest <- dTest$Y - predTest
+    predTest <- data.frame(E = dTest$E, G = dTest$G,
+               pred = as.numeric(ma[(nrow(dTrain)+ 1):(nrow(dTrain) + nrow(dTest)), ] %*%
+                                   cfePred + mu))
+    resTest <- data.frame(E = dTest$E, G = dTest$G,
+                          res = dTest$Y - predTest$pred)
   } else {
     predTest <- NULL
     resTest <- NULL
@@ -551,7 +554,8 @@ GnE <- function(dat,
   indicesTest <- NULL
   if (!is.null(testEnv)) {
     ## add the predicted environmental main effects:
-    predTest <- predTest + as.numeric(parEnvTest[as.character(dTest$E), ])
+    predTest$pred <- predTest$pred +
+      as.numeric(parEnvTest[as.character(dTest$E), ])
     indicesTest <- data.frame(indFrameTest,
                               envMainPred = as.numeric(parEnvTest))
   }
@@ -560,14 +564,14 @@ GnE <- function(dat,
   ## Compute statistics for training data.
   predMain <- as.numeric(predict(modelMain, newx = mm))
   trainAccuracyEnv <- getAccuracyEnv(datNew = dTrain[, "Y"],
-                                     datPred = predTrain,
+                                     datPred = predTrain$pred,
                                      datPredMain = predMain,
                                      datE = dTrain[, "E"],
                                      corType = corType,
                                      rank = TRUE)
   ## Compute accuracies for genotypes.
   trainAccuracyGeno <- getAccuracyGeno(datNew = dTrain[, "Y"],
-                                       datPred = predTrain,
+                                       datPred = predTrain$pred,
                                        datG = dTrain[, "G"],
                                        corType = corType)
   if (!is.null(testEnv)) {
@@ -575,7 +579,7 @@ GnE <- function(dat,
     predMainTest <- mainOnly[as.character(dTest$G)] +
       as.numeric(parEnvTest2[as.character(dTest$E), ])
     testAccuracyEnv <- getAccuracyEnv(datNew = dTest[, "Y"],
-                                      datPred = predTest,
+                                      datPred = predTest$pred,
                                       datPredMain = predMainTest,
                                       datE = dTest[, "E"],
                                       corType = corType,
@@ -597,7 +601,7 @@ GnE <- function(dat,
     testAccuracyEnv$rEst <- as.numeric(rTest)
     ## Compute accuracies for genotypes.
     testAccuracyGeno <- getAccuracyGeno(datNew = dTest[, "Y"],
-                                        datPred = predTest,
+                                        datPred = predTest$pred,
                                         datG = dTest[, "G"],
                                         corType = corType)
   } else {
@@ -605,9 +609,9 @@ GnE <- function(dat,
     testAccuracyGeno <- NULL
   }
   ## Create RMSE.
-  RMSEtrain <- sqrt(mean((dTrain$Y - predTrain) ^ 2, na.rm = TRUE))
+  RMSEtrain <- sqrt(mean((dTrain$Y - predTrain$pred) ^ 2, na.rm = TRUE))
   if (!is.null(testEnv)) {
-    RMSEtest  <- sqrt(mean((dTest$Y - predTest) ^ 2, na.rm = TRUE))
+    RMSEtest  <- sqrt(mean((dTest$Y - predTest$pred) ^ 2, na.rm = TRUE))
   } else {
     RMSEtest <- NULL
   }

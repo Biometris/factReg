@@ -117,13 +117,12 @@ per environment are printed on screen.}
 \value{
 A list with the following elements:
 \describe{
-\item{predTrain}{Vector with predictions for the training set (to do: Add
-the factors genotype and environment; make a data.frame)}
-\item{predTest}{Vector with predictions for the test set (to do: Add the
-factors genotype and environment; make a data.frame). To do: add estimated
-environmental main effects, not only predicted environmental main effects}
-\item{resTrain}{Vector with residuals for the training set}
-\item{resTest}{Vector with residuals for the test set}
+\item{predTrain}{A data.frame with predictions for the training set.}
+\item{predTest}{A data.frame with predictions for the test set
+To do: add estimated environmental main effects, not only predicted
+environmental main effects}
+\item{resTrain}{A data.frame with residuals for the training set}
+\item{resTest}{A data.frame with residuals for the test set}
 \item{mu}{the estimated overall (grand) mean}
 \item{envInfoTrain}{The estimated environmental main effects, and the
 predicted effects, obtained when the former are regressed on the averaged
@@ -133,18 +132,18 @@ environments, obtained from penalized regression using the estimated
 main effects for the training environments and the averaged indices.}
 \item{parGeno}{data.frame containing the estimated genotypic main effects
 (first column) and sensitivities (subsequent columns)}
-\item{trainAccuracyEnv}{a data-frame with the accuracy (r) for each
+\item{trainAccuracyEnv}{a data.frame with the accuracy (r) for each
 training environment, as well as the root mean square error (RMSE), mean
 absolute deviation (MAD) and rank (the latter is a proportion: how many
 of the best 5 genotypes are in the top 10). To be removed or further
 developed. All these quantities are also evaluated for a model with only
 genotypic and environmental main effects (columns rMain, RMSEMain and
 rankMain).}
-\item{testAccuracyEnv}{A data-frame with the accuracy for each test
+\item{testAccuracyEnv}{A data.frame with the accuracy for each test
 environment, with the same columns as trainAccuracyEnv.}
-\item{trainAccuracyGeno}{a data-frame with the accuracy (r) for each
+\item{trainAccuracyGeno}{a data.frame with the accuracy (r) for each
 genotype, averaged over the training environments}
-\item{testAccuracyGeno}{a data-frame with the accuracy (r) for each
+\item{testAccuracyGeno}{a data.frame with the accuracy (r) for each
 genotype, averaged over the test environments}
 \item{lambda}{The value of lambda selected using cross validation.}
 \item{lambdaSequence}{...}
