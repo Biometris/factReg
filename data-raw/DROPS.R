@@ -5,6 +5,9 @@
 BLUEs <- read.csv(file = "data-raw/2b-GrainYield_components_BLUEs_level-1.csv",
                   stringsAsFactors = TRUE)
 
+## Remove parent1 column to match data in other statgen packages.
+BLUEs <- BLUEs[, colnames(BLUEs) != "parent1"]
+
 ## One record in BLUEs is duplicated.
 BLUEs <- BLUEs[!duplicated(BLUEs), ]
 
@@ -18,35 +21,37 @@ BLUEsGE <- BLUEs[BLUEs$Experiment %in% names(BLUEsObs[BLUEsObs > 100]), ]
 ## Read indices.
 indexDat <- read.csv(file = "data-raw/3-Indices_GenoEnv_level-1.csv",
                      stringsAsFactors = TRUE)
+## Remove parent1 column to match data in other statgen packages.
+indexDat <- indexDat[, colnames(indexDat) != "parent1"]
 
 ## Merge indices to BLUEs.
-drops_GEnw <- merge(BLUEsGE, indexDat)
-drops_GEnw <- droplevels(drops_GEnw)
-drops_GEnw$type <- "GE"
-rownames(drops_GEnw) <-
-  paste0(drops_GEnw$Experiment, '_X_', drops_GEnw$Variety_ID)
+drops_GE <- merge(BLUEsGE, indexDat)
+drops_GE <- droplevels(drops_GE)
+drops_GE$type <- "GE"
+rownames(drops_GE) <-
+  paste0(drops_GE$Experiment, '_X_', drops_GE$Variety_ID)
 
 ## Create GnE data.
 BLUEsGnE <- BLUEs[!rownames(BLUEs) %in% rownames(drops_GE), ]
 
 ## Merge indices to BLUEs.
-drops_GnEnw <- merge(BLUEsGnE, indexDat)
-drops_GnEnw <- drops_GnEnw[drops_GnEnw$type == "GnE_ext", ]
-drops_GnEnw <- droplevels(drops_GnEnw)
-drops_GnEnw$type <- "GnE"
-rownames(drops_GnEnw) <-
-  paste0(drops_GnEnw$Experiment, '_X_', drops_GnEnw$Variety_ID)
+drops_GnE <- merge(BLUEsGnE, indexDat)
+drops_GnE <- drops_GnE[drops_GnE$type == "GnE_ext", ]
+drops_GnE <- droplevels(drops_GnE)
+drops_GnE$type <- "GnE"
+rownames(drops_GnE) <-
+  paste0(drops_GnE$Experiment, '_X_', drops_GnE$Variety_ID)
 
 ## Create nGnE data.
 BLUEsnGnE <- BLUEs[!rownames(BLUEs) %in% rownames(drops_GE), ]
 
 ## Merge indices to BLUEs.
-drops_nGnEnw <- merge(BLUEsnGnE, indexDat)
-drops_nGnEnw <- drops_nGnEnw[drops_nGnEnw$type == "nGnE_ext", ]
-drops_nGnEnw <- droplevels(drops_nGnEnw)
-drops_nGnEnw$type <- "nGnE"
-rownames(drops_nGnEnw) <-
-  paste0(drops_nGnEnw$Experiment, '_X_', drops_nGnEnw$Variety_ID)
+drops_nGnE <- merge(BLUEsnGnE, indexDat)
+drops_nGnE <- drops_nGnE[drops_nGnE$type == "nGnE_ext", ]
+drops_nGnE <- droplevels(drops_nGnE)
+drops_nGnE$type <- "nGnE"
+rownames(drops_nGnE) <-
+  paste0(drops_nGnE$Experiment, '_X_', drops_nGnE$Variety_ID)
 
 ## Read genotypic information.
 dropsGeno <- read.csv("data-raw/7a-Genotyping_50K_41722.csv",
