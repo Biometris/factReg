@@ -148,7 +148,7 @@
 #' drops_GE_GnE <- rbind(drops_GE[, -c(2, 4)], drops_GnE[, -c(2, 4)])
 #'
 #' ## Define indeces.
-#' ind <- colnames(drops_GE)[6:16]
+#' ind <- colnames(drops_GE)[13:23]
 #'
 #' ## Define test environments.
 #' testenv <- levels(drops_GnE$Experiment)
