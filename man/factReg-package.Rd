@@ -4,9 +4,9 @@
 \name{factReg-package}
 \alias{factReg}
 \alias{factReg-package}
-\title{factReg: What the Package Does (Title Case)}
+\title{factReg: Multi-environment Genomic Prediction with Penalized Factorial Regression}
 \description{
-More about what it does (maybe more than one line) Use four spaces when indenting paragraphs within the Description.
+Multi-environment genomic prediction for training and test environments using penalized factorial regression. Predictions are made using genotype-specific environmental sensitivities as in Millet et al. (2019) \doi{10.1038/s41588-019-0414-y}.
 }
 \author{
 \strong{Maintainer}: Bart-Jan van Rossum \email{bart-jan.vanrossum@wur.nl} (\href{https://orcid.org/0000-0002-8673-2514}{ORCID})

@@ -1,7 +1,8 @@
 Package: factReg
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
+Title: Multi-environment Genomic Prediction with Penalized Factorial Regression
+Version: 1.0.0
+Date: 2023-06-29
 Authors@R: 
     c(person(given = "Kruijer",
              family = "Willem",
@@ -16,9 +17,11 @@ Authors@R:
              family = "Avagyan",
              role = "ctb",
              comment = c(ORCID = "0000-0001-5838-4850")))
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: GPL
+Description: Multi-environment genomic prediction for training and test 
+    environments using penalized factorial regression. Predictions are made 
+    using genotype-specific environmental sensitivities as in Millet et al. 
+    (2019) <doi:10.1038/s41588-019-0414-y>.
+License: GPL-3
 Depends: 
     R (>= 3.6)
 Imports: 
