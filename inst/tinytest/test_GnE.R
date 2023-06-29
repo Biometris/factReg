@@ -61,7 +61,9 @@ expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
 ## Check that columns can be refered to by names and by numbers.
 modBase <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                E = "Experiment", indices = indices)
-mod1a <- GnE(dat = testDat, Y = 14, G = 2, E = 1, indices = indices)
+modBaseNum <- GnE(dat = testDat, Y = 3, G = 2, E = 1, indices = indices)
+
+expect_equal(modBase, modBaseNum)
 
 ## Check output structure.
 expect_inherits(modBase, "list")

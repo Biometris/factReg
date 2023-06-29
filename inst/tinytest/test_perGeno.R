@@ -62,7 +62,9 @@ expect_error(perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
 ## Check that columns can be refered to by names and by numbers.
 modBase <- perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                    E = "Experiment", indices = indices)
-mod1a <- perGeno(dat = testDat, Y = 14, G = 2, E = 1, indices = indices)
+modBaseNum <- perGeno(dat = testDat, Y = 3, G = 2, E = 1, indices = indices)
+
+expect_equal(modBase, modBaseNum)
 
 ## Check output structure.
 expect_inherits(modBase, "list")
@@ -117,7 +119,7 @@ expect_warning(perGeno(dat = testDat[!testDat$Experiment %in% c("Gai12W", "Gai13
 expect_error(perGeno(dat = testDat[!testDat$Experiment %in% c("Gai12W", "Gai13R"), ],
                      Y = "grain.yield", G = "Variety_ID",
                      E = "Experiment", indices = indices),
-             "No data left in training set")
+             "No data left after removing genotypes with < 10 observations")
 
 
 ## Check that option quadratic works correctly.
@@ -179,6 +181,6 @@ modPartNULL <- perGeno(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                        E = "Experiment", indices = indices,
                        partition = NULL, nfolds = 4)
 
-expect_equal(mean(modPartNULL$trainAccuracyEnv$r), 0.7574933541357)
+expect_equal(mean(modPartNULL$trainAccuracyEnv$r), 0.76355071441678)
 
 

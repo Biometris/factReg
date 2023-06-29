@@ -4,35 +4,29 @@
 #' @description
 #' \loadmathjax
 #' Based on multi-environment field trials, fits the factorial regression model
-#' \mjeqn{Y_{ij} = \mu + e_j + g_i + \sum_{k=1}^s \beta_{ik} x_{ij} + \epsilon_{ij},}{ascii}
-#' with environmental main effects \mjeqn{e_j}{ascii}, genotypic main effects \mjeqn{g_{i}}{ascii} and
-#' genotype-specific environmental sensitivities \mjeqn{\beta_{ik}}{ascii}. See e.g. Millet
+#' \mjeqn{Y_{ij} = \mu + e_j + g_i + \sum_{k=1}^s \beta_{ik} x_{ij} +
+#' \epsilon_{ij},}{ascii} with environmental main effects \mjeqn{e_j}{ascii},
+#' genotypic main effects \mjeqn{g_{i}}{ascii} and genotype-specific
+#' environmental sensitivities \mjeqn{\beta_{ik}}{ascii}. See e.g. Millet
 #' et al 2019 and Bustos-Korts et al 2019. There are \mjeqn{s}{ascii}
-#' environmental indices with values \mjeqn{x_{ij}}{ascii}. Optionally, predictions can be made for a set
-#' of test environments, for which environmental indices are available. The new
-#' environments must contain the same set of genotypes, or a subset
-#' (For genomic prediction of new genotypes, see the function nGnE).
-#' Constraints: the genotypic main effect for the first genotype is put to 0.
+#' environmental indices with values \mjeqn{x_{ij}}{ascii}. Optionally,
+#' predictions can be made for a set of test environments, for which
+#' environmental indices are available. The new environments must contain the
+#' same set of genotypes, or a subset.
 #'
-#' Penalization: model (refer to equation above) is fitted using glmnet, simultaneously penalizing
-#' \mjeqn{e_j}{ascii}, \mjeqn{g_i}{ascii} and \mjeqn{\beta_{ik}}{ascii}.
-#' If penG = 0 and penE = 0, the main effects \mjeqn{g_i}{ascii} and
-#' \mjeqn{e_j}{ascii} are not penalized. If these parameters are 1, the
-#' the main effects are penalized to the same degree as the sensitivities. Any
-#' nonnegative values are allowed.
-#'
-#' Another extension is the option to inlcude common sensitivities that are
-#' the same for each genotype, replacing model (...) by
-#' \mjeqn{Y_{ij} = \mu + e_j + g_i + \sum_{k=1}^s (\beta_{k} + \beta_{ik}) x_{ij} + \epsilon_{ij},}{ascii}
-#'  where, for the the kth environmental covariate,
-#'  \mjeqn{\beta_{k}}{ascii} is the general and
-#'  \mjeqn{\beta_{ik}}{ascii} the genotype-specific sensitivity.
+#' Penalization: the model above is fitted using glmnet, simultaneously
+#' penalizing \mjeqn{e_j}{ascii}, \mjeqn{g_i}{ascii} and
+#' \mjeqn{\beta_{ik}}{ascii}. If \code{penG = 0} and \code{penE = 0}, the main
+#' effects \mjeqn{g_i}{ascii} and \mjeqn{e_j}{ascii} are not penalized. If these
+#' parameters are 1, the the main effects are penalized to the same degree as
+#' the sensitivities. Any non negative values are allowed.
 #'
 #' Predictions for the test environments are first constructed using the
-#' estimated genotypic main effects and sensitivities; next, predicted environmental
-#' main effects are added. The latter are obtained by regressing the estimated
-#' environmental main effects for the training environment on the average values
-#' of the indices in these environments, as in Millet et al 2019.
+#' estimated genotypic main effects and sensitivities; next, predicted
+#' environmental main effects are added. The latter are obtained by
+#' regressing the estimated environmental main effects for the training
+#' environments on the average values of the indices in these environments,
+#' as in Millet et al. 2019.
 #'
 #' @param dat A \code{data.frame} with data from multi-environment trials.
 #' Each row corresponds to a particular genotype in a particular environment.
@@ -60,7 +54,7 @@
 #' @param testEnv vector (character). Data from these environments are not used
 #' for fitting the model. Accuracy is evaluated for training and test
 #' environments separately. The default is \code{NULL}, i.e. no test
-#' environments, in which case the whole dataset is training. It is also
+#' environments, in which case the whole data set is training. It is also
 #' possible that there are test environments, but without any data; in this
 #' case, no accuracy is reported for test environments (CHECK correctness).
 #' @param weight Numeric vector of length \code{nrow(dat)}, specifying the
@@ -84,8 +78,7 @@
 #' @param alpha Type of penalty, as in glmnet (1 = LASSO, 0 = ridge; in between
 #'  = elastic net). Default is 1.
 #' @param lambda Numeric vector; defines the grid over which the penalty lambda
-#' is optimised in cross validation.
-#' Default: NULL (defined by glmnet).
+#' is optimized in cross validation. Default: NULL (defined by glmnet).
 #' Important special case: lambda = 0 (no penalty).
 #' @param penG numeric; default 0. If 1, genotypic main effects are
 #' penalized. If 0, they are not. Any non negative real number is allowed.
@@ -103,19 +96,17 @@
 #'
 #' @return A list with the following elements:
 #' \describe{
-#'   \item{predTrain}{A data.frame with predictions for the training set.}
-#'   \item{predTest}{A data.frame with predictions for the test set
-#'   To do: add estimated environmental main effects, not only predicted
-#'   environmental main effects}
+#'   \item{predTrain}{A data.frame with predictions for the training set}
+#'   \item{predTest}{A data.frame with predictions for the test set}
 #'   \item{resTrain}{A data.frame with residuals for the training set}
 #'   \item{resTest}{A data.frame with residuals for the test set}
-#'   \item{mu}{the estimated overall (grand) mean}
+#'   \item{mu}{the estimated overall mean}
 #'   \item{envInfoTrain}{The estimated environmental main effects, and the
 #'   predicted effects, obtained when the former are regressed on the averaged
-#'   indices, using penalized regression.}
+#'   indices, using penalized regression}
 #'   \item{envInfoTest}{The predicted environmental main effects for the test
 #'   environments, obtained from penalized regression using the estimated
-#'   main effects for the training environments and the averaged indices.}
+#'   main effects for the training environments and the averaged indices}
 #'   \item{parGeno}{data.frame containing the estimated genotypic main effects
 #'   (first column) and sensitivities (subsequent columns)}
 #'   \item{trainAccuracyEnv}{a data.frame with the accuracy (r) for each
@@ -124,15 +115,17 @@
 #'   of the best 5 genotypes are in the top 10). To be removed or further
 #'   developed. All these quantities are also evaluated for a model with only
 #'   genotypic and environmental main effects (columns rMain, RMSEMain and
-#'   rankMain).}
+#'   rankMain)}
 #'   \item{testAccuracyEnv}{A data.frame with the accuracy for each test
-#'   environment, with the same columns as trainAccuracyEnv.}
+#'   environment, with the same columns as trainAccuracyEnv}
 #'   \item{trainAccuracyGeno}{a data.frame with the accuracy (r) for each
 #'   genotype, averaged over the training environments}
 #'   \item{testAccuracyGeno}{a data.frame with the accuracy (r) for each
 #'   genotype, averaged over the test environments}
-#'   \item{lambda}{The value of lambda selected using cross validation.}
-#'   \item{lambdaSequence}{...}
+#'   \item{lambda}{The value of lambda selected using cross validation}
+#'   \item{lambdaSequence}{The values of lambda used in the fits of glmnet. If
+#'   \code{lambda} was provided as input, the value of \code{lambda} is
+#'   returned}
 #'   \item{RMSEtrain}{The root mean squared error on the training environments}
 #'   \item{RMSEtest}{The root mean squared error on the test environments}
 #'   \item{Y}{The name of the trait that was predicted, i.e. the column name
@@ -191,6 +184,10 @@
 #'                    alpha = 0, scaling = "train")
 #' }
 #'
+#' @references Millet, E.J., Kruijer, W., Coupel-Ledru, A. et al. Genomic
+#' prediction of maize yield across European environmental conditions. Nat
+#' Genet 51, 952–956 (2019). \doi{10.1038/s41588-019-0414-y}
+#'
 #' @export
 GnE <- function(dat,
                 Y,
@@ -216,8 +213,10 @@ GnE <- function(dat,
   if (!inherits(dat, "data.frame")) {
     stop("dat should be a data.frame.\n")
   }
-  ## Get traitName.
+  ## Get column names.
   traitName <- if (is.numeric(Y)) names(dat)[Y] else Y
+  genoName <- if (is.numeric(G)) names(dat)[G] else G
+  envName <- if (is.numeric(E)) names(dat)[E] else E
   ## Rename data columns for Y, G and E. - this includes checks.
   dat <- renameYGE(dat = dat, Y = Y, G = G, E = E)
   stopifnot(penG >= 0) # also > 1 is possible!
@@ -277,7 +276,6 @@ GnE <- function(dat,
   trainEnv <- setdiff(levels(dat$E), testEnv)
   ## Remove missing values from training envs.
   dat <- dat[!(is.na(dat$Y) & dat$E %in% trainEnv), ]
-  dat <- droplevels(dat)
   redundantGeno <- names(which(table(dat$G[!is.na(dat$Y) &
                                              dat$E %in% trainEnv]) < 10))
   if (length(redundantGeno) > 0) {
@@ -294,6 +292,7 @@ GnE <- function(dat,
     dat <- dat[, setdiff(names(dat), indices)]
     dat <- merge(dat, indicesData, by.x = "E", by.y = "row.names")
   }
+  dat <- droplevels(dat)
   ## Scale environmental variables.
   if (scaling == "train") {
     muTr <- colMeans(dat[dat$E %in% trainEnv, indices])
@@ -638,9 +637,9 @@ GnE <- function(dat,
               lambdaSequence = lambdaSequence,
               RMSEtrain = RMSEtrain,
               RMSEtest = RMSEtest,
-              Y = Y,
-              G = G,
-              E = E,
+              Y = traitName,
+              G = genoName,
+              E = envName,
               indices = indices,
               quadratic = quadratic)
   return(out)

@@ -57,7 +57,7 @@ contained in \code{dat$E}); the column names are the indices. If
 \item{testEnv}{vector (character). Data from these environments are not used
 for fitting the model. Accuracy is evaluated for training and test
 environments separately. The default is \code{NULL}, i.e. no test
-environments, in which case the whole dataset is training. It is also
+environments, in which case the whole data set is training. It is also
 possible that there are test environments, but without any data; in this
 case, no accuracy is reported for test environments (CHECK correctness).}
 

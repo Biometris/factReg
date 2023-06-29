@@ -75,8 +75,10 @@ perGeno <- function(dat,
   if (!inherits(dat, "data.frame")) {
     stop("dat should be a data.frame.\n")
   }
-  ## Get traitName.
-  traitName <- ifelse(is.numeric(Y), names(dat)[Y], Y)
+  ## Get column names.
+  traitName <- if (is.numeric(Y)) names(dat)[Y] else Y
+  genoName <- if (is.numeric(G)) names(dat)[G] else G
+  envName <- if (is.numeric(E)) names(dat)[E] else E
   ## Rename data columns for Y, G and E.
   dat <- renameYGE(dat = dat, Y = Y, G = G, E = E)
   scaling <- match.arg(scaling)
@@ -117,13 +119,23 @@ perGeno <- function(dat,
   trainEnv <- setdiff(levels(dat$E), testEnv)
   ## Remove missing values from training envs.
   dat <- dat[!(is.na(dat$Y) & dat$E %in% trainEnv), ]
-  dat <- droplevels(dat)
+  redundantGeno <- names(which(table(dat$G[!is.na(dat$Y) &
+                                             dat$E %in% trainEnv]) < 10))
+  if (length(redundantGeno) > 0) {
+    warning("the following genotypes have < 10 observations, and are removed:",
+            "\n\n", paste(redundantGeno, collapse = ", "), "\n")
+    dat <- dat[!(dat$G %in% redundantGeno), ]
+    if (nrow(dat) == 0) {
+      stop("No data left after removing genotypes with < 10 observations.\n")
+    }
+  }
   if (!is.null(indicesData)) {
     indices <- colnames(indicesData)
     ## Remove columns from dat that are also in indices and then merge indices.
     dat <- dat[, setdiff(names(dat), indices)]
     dat <- merge(dat, indicesData, by.x = "E", by.y = "row.names")
   }
+  dat <- droplevels(dat)
   ## Scale environmental variables.
   if (scaling == "train") {
     muTr <- colMeans(dat[dat$E %in% trainEnv, indices])
@@ -148,15 +160,8 @@ perGeno <- function(dat,
   }
   ## Split dat into training and test set.
   dTrain <- dat[dat$E %in% trainEnv, ]
-  redundantGeno <- names(which(table(dTrain$G[!is.na(dTrain$Y)]) < 10))
-  if (length(redundantGeno) > 0) {
-    warning("the following genotypes have < 10 observations, and are removed:",
-            "\n\n", paste(redundantGeno, collapse = ", "), "\n")
-    dTrain <- dTrain[!(dTrain$G %in% redundantGeno), ]
-  }
-  if (nrow(dTrain) == 0) {
-    stop("No data left in training set.\n")
-  }
+  #dTrainNA <- .....
+  #dTrain <- dat[dat$E %in% trainEnv & !is.na(dat$Y), ]
   dTrain <- droplevels(dTrain)
   if (!is.null(testEnv)) {
     dTest <- dat[dat$E %in% testEnv, ]
@@ -202,8 +207,8 @@ perGeno <- function(dat,
   mm <- Matrix::sparse.model.matrix(Y ~ E + G, data = dTrain)
   modelMain <- glmnet::glmnet(y = dTrain$Y, x = mm, thresh = 1e-18, lambda = 0)
   cf <- c(modelMain$a0, modelMain$beta[-1])
-  names(cf) <- c("(Intercept)", paste0('E', levels(dTrain$E)[-1]),
-                 paste0('G', levels(dTrain$G)[-1]))
+  names(cf) <- c("(Intercept)", paste0("E", levels(dTrain$E)[-1]),
+                 paste0("G", levels(dTrain$G)[-1]))
   ## Even if useRes is FALSE, genoMain will still be used for comparison with a
   ## main effects only model
   genoMain <- setNames(c(0, cf[(nEnvTrain + 1):(nEnvTrain + nGenoTrain - 1)]),
@@ -396,9 +401,9 @@ perGeno <- function(dat,
               testAccuracyGeno = testAccuracyGeno,
               RMSEtrain = RMSEtrain,
               RMSEtest = RMSEtest,
-              Y = Y,
-              G = G,
-              E = E,
+              Y = traitName,
+              G = genoName,
+              E = envName,
               indices = indices,
               genotypes = levels(dTrain$G),
               lambdaOpt = lambdaOpt,
