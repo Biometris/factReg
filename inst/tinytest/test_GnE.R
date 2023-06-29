@@ -213,3 +213,30 @@ modPartNULL <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
 
 expect_equal(mean(modPartNULL$trainAccuracyEnv$r), 0.791322119880585)
 
+
+## Check that output can be written to file.
+
+tmpFile <- tempfile()
+
+modOut <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+              E = "Experiment", indices = indices, lambda = modBase$lambda,
+              testEnv = "Cam12R", outputFile = tmpFile)
+
+outTrain <- read.csv(paste0(tmpFile, "_perEnv_Train.csv"))
+outTest <- read.csv(paste0(tmpFile, "_perEnv_Test.csv"))
+
+expect_equal(modOut$trainAccuracyEnv, outTrain)
+expect_equal(modOut$testAccuracyEnv, outTest)
+
+
+## Check that output is written to console with verbose.
+
+expect_stdout(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
+               E = "Experiment", indices = indices, lambda = modBase$lambda,
+               testEnv = "Cam12R", verbose = TRUE),
+               "Training environments ( grain.yield )", fixed = TRUE)
+
+
+
+
+
