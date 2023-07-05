@@ -7,3 +7,5 @@ testScripts
 .yml
 .txt
 public
+^README\.Rmd$
+^cran-comments\.md$

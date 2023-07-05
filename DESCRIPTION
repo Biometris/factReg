@@ -2,7 +2,7 @@ Package: factReg
 Type: Package
 Title: Multi-environment Genomic Prediction with Penalized Factorial Regression
 Version: 1.0.0
-Date: 2023-06-29
+Date: 2023-07-05
 Authors@R: 
     c(person(given = "Kruijer",
              family = "Willem",
