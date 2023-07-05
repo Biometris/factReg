@@ -44,7 +44,10 @@ character or numeric).}
 \item{E}{The column in \code{dat} containing the factor environment
 (either character or numeric).}
 
-\item{K}{A kinship matrix. ...........}
+\item{K}{A kinship matrix. Used for replacing the estimated genotypic main
+effect and each of the sensitivities by genomic prediction from a g-BLUP
+model for each of them. If \code{NULL}, the estimated effects from the model
+are returned and used for constructing predictions.}
 
 \item{indices}{The columns in \code{dat} containing the environmental
 indices (vector of type character). Alternatively, if the indices are always
@@ -177,7 +180,14 @@ penalizing \mjeqn{e_j}{ascii}, \mjeqn{g_i}{ascii} and
 \mjeqn{\beta_{ik}}{ascii}. If \code{penG = 0} and \code{penE = 0}, the main
 effects \mjeqn{g_i}{ascii} and \mjeqn{e_j}{ascii} are not penalized. If these
 parameters are 1, the the main effects are penalized to the same degree as
-the sensitivities. Any non negative values are allowed.
+the sensitivities. Any non negative values are allowed. Cross validation is
+performed with each fold containing a number of environments (details below).
+
+After fitting the model, it is possible to replace the estimated
+genotypic main effects and sensitivities by
+their predicted genetic values. Specifically, if a kinship matrix \code{K}
+is assigned the function performs genomic prediction with g-BLUP for the
+genotypic main effect and each of the sensitivities in turn.
 
 Predictions for the test environments are first constructed using the
 estimated genotypic main effects and sensitivities; next, predicted

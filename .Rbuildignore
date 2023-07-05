@@ -1,7 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 .csv
-.pdf
 ^data-raw$
 testScripts
 .yml

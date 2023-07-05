@@ -4,7 +4,7 @@
 \name{factReg-package}
 \alias{factReg}
 \alias{factReg-package}
-\title{factReg: Multi-environment Genomic Prediction with Penalized Factorial Regression}
+\title{factReg: Multi-Environment Genomic Prediction with Penalized Factorial Regression}
 \description{
 Multi-environment genomic prediction for training and test environments using penalized factorial regression. Predictions are made using genotype-specific environmental sensitivities as in Millet et al. (2019) \doi{10.1038/s41588-019-0414-y}.
 }

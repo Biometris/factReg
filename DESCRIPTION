@@ -1,6 +1,6 @@
 Package: factReg
 Type: Package
-Title: Multi-environment Genomic Prediction with Penalized Factorial Regression
+Title: Multi-Environment Genomic Prediction with Penalized Factorial Regression
 Version: 1.0.0
 Date: 2023-07-05
 Authors@R: 
