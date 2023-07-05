@@ -8,3 +8,5 @@ testScripts
 public
 ^README\.Rmd$
 ^cran-comments\.md$
+unused
+^CRAN-SUBMISSION$
