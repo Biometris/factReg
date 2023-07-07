@@ -168,7 +168,7 @@
 #'                       G = "Variety_ID", E = "Experiment", testEnv = testenv,
 #'                       indices = ind, penG = FALSE, penE = FALSE,
 #'                       alpha = 0.5, scaling = "train")
-#' \dontrun{
+#' \donttest{
 #' ## Full model, no penalization (set the penalty parameter to zero).
 #' Full_model <- GnE(drops_GE_GnE, Y = "grain.yield", lambda = 0,
 #'                   G = "Variety_ID", E = "Experiment", testEnv = testenv,

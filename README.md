@@ -4,6 +4,12 @@
 # factReg
 
 <!-- badges: start -->
+
+[![](https://www.r-pkg.org/badges/version/factReg)](https://www.r-pkg.org/pkg/factReg)
+[![CRAN RStudio mirror
+downloads](https://cranlogs.r-pkg.org/badges/factReg)](https://www.r-pkg.org/pkg/factReg)
+[![R-CMD-check](https://github.com/Biometris/factReg/workflows/R-CMD-check/badge.svg)](https://github.com/Biometris/factReg/actions?workflow=R-CMD-check)
+[![codecov](https://codecov.io/gh/Biometris/factReg/branch/master/graph/badge.svg)](https://app.codecov.io/gh/Biometris/factReg)
 <!-- badges: end -->
 
 Multi-environment genomic prediction for training and test environments
@@ -12,7 +18,7 @@ genotype-specific environmental sensitivities
 
 ## Installation
 
-You can install the development version of factReg like so:
+You can install factReg like so:
 
 - Install from CRAN:
 

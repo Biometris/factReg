@@ -1,3 +1,7 @@
+## Initial release
+
+After initial rejection, replaced dontrun by donttest for examples
+
 ## R CMD check results
 
 0 errors | 0 warnings | 2 notes
