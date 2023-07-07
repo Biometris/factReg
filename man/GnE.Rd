@@ -38,11 +38,14 @@ test environments (see testEnv)}
 it should be one of the column names in \code{dat}, or numeric, in which
 case the Yth column of \code{dat} will be analyzed.}
 
-\item{G}{The column in \code{dat} containing the factor genotype (either
-character or numeric).}
+\item{G}{The column in \code{dat} containing the factor genotype: either of
+type character, in which case it should be one of the column names in
+\code{dat}, or numeric, in which case the Gth column of \code{dat} will be
+used.}
 
-\item{E}{The column in \code{dat} containing the factor environment
-(either character or numeric).}
+\item{E}{The column in \code{dat} containing the factor environment: either
+of type character, in which case it should be one of the column names in
+\code{dat}, or numeric, in which case the Eth column of \code{dat} will be}
 
 \item{K}{A kinship matrix. Used for replacing the estimated genotypic main
 effect and each of the sensitivities by genomic prediction from a g-BLUP
@@ -66,7 +69,7 @@ for fitting the model. Accuracy is evaluated for training and test
 environments separately. The default is \code{NULL}, i.e. no test
 environments, in which case the whole data set is training. It is also
 possible that there are test environments, but without any data; in this
-case, no accuracy is reported for test environments (CHECK correctness).}
+case, no accuracy is reported for test environments.}
 
 \item{weight}{Numeric vector of length \code{nrow(dat)}, specifying the
 weight (inverse variance) of each observation, used in glmnet. Default
@@ -201,10 +204,10 @@ as in Millet et al. 2019.
 data(drops_GE)
 data(drops_GnE)
 
-## We remove identifiers that we don't need.
-drops_GE_GnE <- rbind(drops_GE[, -c(2, 4)], drops_GnE[, -c(2, 4)])
+## Bind GE and GnE together to get data set for training and testing.
+drops_GE_GnE <- rbind(drops_GE, drops_GnE)
 
-## Define indeces.
+## Define indices.
 ind <- colnames(drops_GE)[13:23]
 
 ## Define test environments.

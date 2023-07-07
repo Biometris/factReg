@@ -36,11 +36,14 @@ test environments (see testEnv)}
 it should be one of the column names in \code{dat}, or numeric, in which
 case the Yth column of \code{dat} will be analyzed.}
 
-\item{G}{The column in \code{dat} containing the factor genotype (either
-character or numeric).}
+\item{G}{The column in \code{dat} containing the factor genotype: either of
+type character, in which case it should be one of the column names in
+\code{dat}, or numeric, in which case the Gth column of \code{dat} will be
+used.}
 
-\item{E}{The column in \code{dat} containing the factor environment
-(either character or numeric).}
+\item{E}{The column in \code{dat} containing the factor environment: either
+of type character, in which case it should be one of the column names in
+\code{dat}, or numeric, in which case the Eth column of \code{dat} will be}
 
 \item{indices}{The columns in \code{dat} containing the environmental
 indices (vector of type character). Alternatively, if the indices are always
@@ -59,7 +62,7 @@ for fitting the model. Accuracy is evaluated for training and test
 environments separately. The default is \code{NULL}, i.e. no test
 environments, in which case the whole data set is training. It is also
 possible that there are test environments, but without any data; in this
-case, no accuracy is reported for test environments (CHECK correctness).}
+case, no accuracy is reported for test environments.}
 
 \item{weight}{Numeric vector of length \code{nrow(dat)}, specifying the
 weight (inverse variance) of each observation, used in glmnet. Default

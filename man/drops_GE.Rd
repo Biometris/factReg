@@ -14,7 +14,7 @@ data.frames with 24 variables.
 city’s name followed by the year of experiment and the water regime with W
 for watered and R for rain-fed.}
 \item{Code_ID, Variety_ID, Accession_ID}{identifier of the genotype}
-\item{grain.yield}{genotypic mean for yield adjusted at 15\\% grain moisture,
+\item{grain.yield}{genotypic mean for yield adjusted at 15\% grain moisture,
 in ton per hectare (t ha^-1)}
 \item{grain.number}{genotypic mean for number of grain per square meter}
 \item{grain.weight}{genotypic mean for individual grain weight in milligram
