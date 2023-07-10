@@ -411,7 +411,7 @@ GnE <- function(dat,
   thr <- 1e-07
   if (lambdaProvided && length(lambda) == 1) {
     if (lambda == 0) {
-      thr <- 1e-11
+      thr <- 1e-10 #1e-11
     }
     glmnetOutA <- glmnet::glmnet(x = ma[1:nrow(dTrain),],
                                  y = dTrain$Y,
@@ -420,7 +420,7 @@ GnE <- function(dat,
                                  alpha = alpha, standardize = TRUE,
                                  penalty.factor = penaltyFactorA,
                                  intercept = TRUE,
-                                 thres = thr)
+                                 thresh = thr)
     lambdaIndex <- 1
     lambdaSequence <- lambda
     cfe <- glmnetOutA$beta
