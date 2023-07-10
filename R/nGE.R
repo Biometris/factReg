@@ -33,57 +33,57 @@ nGE <- function(dat,
   }
   genotypes <- levels(dat$G)
   environments <- levels(dat$E)
-  nG <- nlevels(dat$G)
-  nE <- nlevels(dat$E)
+  nGeno <- nlevels(dat$G)
+  nEnv <- nlevels(dat$E)
   if (is.list(K)) {
-    ms <- setdiff(rownames(K[[1]]), levels(dat$G))
+    ms <- setdiff(rownames(K[[1]]), genotypes)
   } else {
-    ms <- setdiff(rownames(K), levels(dat$G))
+    ms <- setdiff(rownames(K), genotypes)
   }
   genotypes <- c(genotypes, ms)
-  nG <- nG + length(ms)
+  nGeno <- nGeno + length(ms)
   rownames(dat) <- paste0(dat$E, "_X_", dat$G)
-  g <- data.frame(G = rep(genotypes, nE),
-                  E = rep(environments, each = nG),
-                  value = NA,
-                  PEV = NA)
-  rownames(g) <- paste0(g$E, "_X_", g$G)
-  Vg <- Ve <- rep(NA, nE)
+  pred <- data.frame(G = rep(genotypes, nEnv),
+                     E = rep(environments, each = nGeno),
+                     value = NA,
+                     PEV = NA)
+  rownames(pred) <- paste0(pred$E, "_X_", pred$G)
+  Vg <- Ve <- rep(NA, nEnv)
   dat$Ve <- rep(NA, nrow(dat))
   if (is.list(K)) {
-    for (j in 1:nE) {
-      dj <- dat[dat$E == environments[j], ]
-      dj <- droplevels(dj)
-      obs.geno <- as.character(dj$G[!is.na(dj$Y)])
-      if (length(obs.geno) > 0) {
+    for (j in 1:nEnv) {
+      envDat <- dat[dat$E == environments[j], ]
+      envDat <- droplevels(envDat)
+      obsGeno <- as.character(envDat$G[!is.na(envDat$Y)])
+      if (length(obsGeno) > 0) {
         Kj <- K
         for (i in 1:length(Kj)) {
-          Kj[[i]] <- Kj[[i]][obs.geno, obs.geno]
+          Kj[[i]] <- Kj[[i]][obsGeno, obsGeno]
         }
-        r1 <- gaston::lmm.aireml(Y = dj$Y, K = Kj, verbose = FALSE)
-        pr <- rep(r1$BLUP_beta, nG)
-        names(pr) <- paste0(environments[j],'_X_',genotypes)
+        kinMod <- gaston::lmm.aireml(Y = envDat$Y, K = Kj, verbose = FALSE)
+        pr <- rep(kinMod$BLUP_beta, nGeno)
+        names(pr) <- paste0(environments[j], "_X_", genotypes)
         for (i in 1:length(K)) {
-          pr <- pr + r1$tau[i] *
-            as.numeric(K[[i]][genotypes, obs.geno] %*% r1$Py)
+          pr <- pr + kinMod$tau[i] *
+            as.numeric(K[[i]][genotypes, obsGeno] %*% kinMod$Py)
         }
-        g[names(pr), 3] <- as.numeric(pr)
+        pred[names(pr), "value"] <- as.numeric(pr)
       }
     }
     return(list(pred = g))
   } else {
-    for (j in 1:nE) {
-      dj <- dat[dat$E == environments[j],]
-      dj <- droplevels(dj)
-      b  <- rrBLUP::kin.blup(data = dj, geno = "G", pheno = "Y",
-                             K = K, PEV = TRUE)
-      Vg[j] <- b$Vg
-      Ve[j] <- b$Ve
-      dat[dat$E == environments[j], "Ve"] <- b$Ve
-      names(b$pred) <- paste0(environments[j], "_X_", names(b$pred))
-      g[names(b$pred), 3] <- as.numeric(b$pred)
-      g[names(b$pred), 4] <- as.numeric(b$PEV)
+    for (j in 1:nEnv) {
+      envDat <- dat[dat$E == environments[j],]
+      envDat <- droplevels(envDat)
+      kinMod  <- rrBLUP::kin.blup(data = envDat, geno = "G", pheno = "Y",
+                                  K = K, PEV = TRUE)
+      Vg[j] <- kinMod$Vg
+      Ve[j] <- kinMod$Ve
+      dat[dat$E == environments[j], "Ve"] <- kinMod$Ve
+      names(kinMod$pred) <- paste0(environments[j], "_X_", names(kinMod$pred))
+      pred[names(kinMod$pred), "value"] <- as.numeric(kinMod$pred)
+      pred[names(kinMod$pred), "PEV"] <- as.numeric(kinMod$PEV)
     }
-    return(list(pred = g, Vg = Vg, Ve = Ve))
+    return(list(pred = pred, Vg = Vg, Ve = Ve))
   }
 }
