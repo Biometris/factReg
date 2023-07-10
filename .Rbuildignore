@@ -10,3 +10,4 @@ public
 ^cran-comments\.md$
 unused
 ^CRAN-SUBMISSION$
+.github

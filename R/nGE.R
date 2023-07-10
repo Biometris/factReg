@@ -22,11 +22,6 @@ nGE <- function(dat,
                 G,
                 E,
                 K) {
-  #                algorithm = c('',''),
-  #                keepObserved = TRUE,
-  #                predictAll = FALSE) {
-
-  # from GnE_glmnet:
   ## Rename data columns for Y, G and E.
   dat <- renameYGE(dat = dat, Y = Y, G = G, E = E)
   dat <- dat[!is.na(dat$Y), ]
@@ -48,7 +43,6 @@ nGE <- function(dat,
   genotypes <- c(genotypes, ms)
   nG <- nG + length(ms)
   rownames(dat) <- paste0(dat$E, "_X_", dat$G)
-  ###############
   g <- data.frame(G = rep(genotypes, nE),
                   E = rep(environments, each = nG),
                   value = NA,
@@ -73,10 +67,7 @@ nGE <- function(dat,
           pr <- pr + r1$tau[i] *
             as.numeric(K[[i]][genotypes, obs.geno] %*% r1$Py)
         }
-        #dat[dat$E == environments[j],'Ve'] <- b$Ve
-        #names(b$pred) <- paste0(environments[j],'_X_',names(b$pred))
-        g[names(pr), 3] <- as.numeric(pr) # names(b$pred)
-        #g[names(b$pred), 4] <- as.numeric(b$PEV)
+        g[names(pr), 3] <- as.numeric(pr)
       }
     }
     return(list(pred = g))
@@ -90,14 +81,9 @@ nGE <- function(dat,
       Ve[j] <- b$Ve
       dat[dat$E == environments[j], "Ve"] <- b$Ve
       names(b$pred) <- paste0(environments[j], "_X_", names(b$pred))
-      g[names(b$pred), 3] <- as.numeric(b$pred) # names(b$pred)
+      g[names(b$pred), 3] <- as.numeric(b$pred)
       g[names(b$pred), 4] <- as.numeric(b$PEV)
     }
-    # if (keepObserved==TRUE) {
-    #   rn <- rownames(dat)[!is.na(dat[,"Y"])]
-    #   g[rn, 3] <- dat[rn, "Y"]
-    #   g[rn, 4] <- dat[rn, "Ve"]
-    # }
     return(list(pred = g, Vg = Vg, Ve = Ve))
   }
 }
