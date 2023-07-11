@@ -408,19 +408,14 @@ GnE <- function(dat,
   # depending on lambda!
   # run glmnet, either (if provided) for a single value of lambda
   # (using glmnet), or using cv.glmnet
-  thr <- 1e-07
   if (lambdaProvided && length(lambda) == 1) {
-    if (lambda == 0) {
-      thr <- 1e-10 #1e-11
-    }
     glmnetOutA <- glmnet::glmnet(x = ma[1:nrow(dTrain),],
                                  y = dTrain$Y,
                                  lambda = lambda,
                                  weights = dTrain$W,
                                  alpha = alpha, standardize = TRUE,
                                  penalty.factor = penaltyFactorA,
-                                 intercept = TRUE,
-                                 thresh = thr)
+                                 intercept = TRUE)
     lambdaIndex <- 1
     lambdaSequence <- lambda
     cfe <- glmnetOutA$beta
