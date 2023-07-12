@@ -38,26 +38,6 @@ renameYGE <- function(dat,
 #'
 #' @noRd
 #' @keywords internal
-exRank <- function(y0,
-                   yPred,
-                   topOnly = TRUE,
-                   k = 5,
-                   m = 10) {
-  b <- sort(y0, decreasing = TRUE)[k]
-  topK <- which(y0 >= b)
-
-  a <- sort(yPred, decreasing = TRUE)[m]
-  topM <- which(yPred >= a)
-
-  return(length(intersect(topK, topM)) / k)
-}
-
-#' Helper function
-#'
-#' Helper function for ....
-#'
-#' @noRd
-#' @keywords internal
 corFun <- function(x,
                    y,
                    corType) {
@@ -75,8 +55,7 @@ getAccuracyEnv <- function(datNew,
                            datPred,
                            datPredMain,
                            datE,
-                           corType,
-                           rank = FALSE) {
+                           corType) {
   ## Split data by environments.
   sNew <- split(datNew, datE)
   sPred <- split(datPred, datE)
@@ -99,13 +78,6 @@ getAccuracyEnv <- function(datNew,
                          MAD = mapply(FUN = MADFun, sNew, sPred),
                          row.names = NULL)
   ## Add rank.
-  if (rank) {
-    rankDat <- data.frame(
-      rank = mapply(FUN = exRank, sNew, sPred),
-      rankMain = mapply(FUN = exRank, sNew, sPredMain),
-      row.names = NULL)
-    accuracy <- cbind(accuracy, rankDat)
-  }
   return(accuracy)
 }
 

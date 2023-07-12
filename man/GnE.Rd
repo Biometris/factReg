@@ -137,11 +137,9 @@ main effects for the training environments and the averaged indices}
 (first column) and sensitivities (subsequent columns)}
 \item{trainAccuracyEnv}{a data.frame with the accuracy (r) for each
 training environment, as well as the root mean square error (RMSE), mean
-absolute deviation (MAD) and rank (the latter is a proportion: how many
-of the best 5 genotypes are in the top 10). To be removed or further
-developed. All these quantities are also evaluated for a model with only
-genotypic and environmental main effects (columns rMain, RMSEMain and
-rankMain)}
+absolute deviation (MAD). All these quantities are also evaluated for a
+model with only genotypic and environmental main effects (columns rMain,
+RMSEMain and rankMain)}
 \item{testAccuracyEnv}{A data.frame with the accuracy for each test
 environment, with the same columns as trainAccuracyEnv}
 \item{trainAccuracyGeno}{a data.frame with the accuracy (r) for each

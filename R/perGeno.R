@@ -337,8 +337,7 @@ perGeno <- function(dat,
                                      datPred = predTrain,
                                      datPredMain = predMain,
                                      datE = dTrain[, "E"],
-                                     corType = corType,
-                                     rank = TRUE)
+                                     corType = corType)
   ## Compute accuracies for genotypes.
   trainAccuracyGeno <- getAccuracyGeno(datNew = dTrain[, "Y"],
                                        datPred = predTrain,
@@ -351,8 +350,7 @@ perGeno <- function(dat,
                                       datPred = predTest,
                                       datPredMain = predMainTest,
                                       datE = dTest[, "E"],
-                                      corType = corType,
-                                      rank = TRUE)
+                                      corType = corType)
     ## Compute accuracies for genotypes.
     testAccuracyGeno <- getAccuracyGeno(datNew = dTest[, "Y"],
                                         datPred = predTest,
