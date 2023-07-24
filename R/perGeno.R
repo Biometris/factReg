@@ -139,7 +139,7 @@ perGeno <- function(dat,
   ## Scale environmental variables.
   if (scaling == "train") {
     muTr <- colMeans(dat[dat$E %in% trainEnv, indices])
-    sdTr <- sapply(X = dat[dat$E %in% trainEnv, indices], sd)
+    sdTr <- pmax(sapply(X = dat[dat$E %in% trainEnv, indices], sd), 1e-10)
     dat[, indices] <- scale(dat[, indices], center = muTr, scale = sdTr)
   } else if (scaling == "all") {
     dat[, indices] <- scale(dat[, indices])
@@ -251,7 +251,9 @@ perGeno <- function(dat,
     scn <- colnames(mTrain)[cn]
     gnInd <- which(dTrain$G == gg)
     mgg <- mTrain[gnInd, scn, drop = FALSE]
-    mTrainGeno <- scale(mgg)
+    mugg <- Matrix::colMeans(mgg)
+    sdgg <- pmax(apply(X = mgg, MARGIN = 2, FUN = sd), 1e-10)
+    mTrainGeno <- scale(mgg, center = mugg, scale = sdgg)
     if (useRes) {
       yTemp <- dTrain$yRes[gnInd]
     } else {
@@ -283,8 +285,6 @@ perGeno <- function(dat,
     }
     ## Predictions for test set.
     if (!is.null(testEnv) && gg %in% levels(dTest$G)) {
-      mugg <- Matrix::colMeans(mgg)
-      sdgg <- apply(X = mgg, MARGIN = 2, FUN = sd)
       mggTest <- mTest[dTest$G == gg, scn, drop = FALSE]
       mTest[dTest$G == gg, scn] <- scale(mggTest, center = mugg, scale = sdgg)
       glmnetPred <- as.numeric(predict(object = glmnetOut,
