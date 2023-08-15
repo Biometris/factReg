@@ -3,6 +3,7 @@
 export(GnE)
 export(frBLUP)
 export(nGE)
+export(nGnE)
 export(perGeno)
 import(stats)
 importFrom(mathjaxr,preview_rd)
