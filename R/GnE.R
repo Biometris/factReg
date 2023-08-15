@@ -284,6 +284,12 @@ GnE <- function(dat,
            "column names.\n")
     }
   }
+  if (is.null(weight)) {
+    dat$W <- 1
+  } else {
+    stopifnot(length(weight) == nrow(dat))
+    dat$W <- weight
+  }
   ## Get training envs.
   trainEnv <- setdiff(levels(dat$E), testEnv)
   ## Remove missing values from training envs.
@@ -323,12 +329,6 @@ GnE <- function(dat,
     dat <- cbind(dat, datIndQuad)
     ## Add the quadratic columns to the indices.
     indices <- c(indices, paste0(indices, "_quad"))
-  }
-  if (is.null(weight)) {
-    dat$W <- 1
-  } else {
-    stopifnot(length(weight) == nrow(dat))
-    dat$W <- weight
   }
   ## Split dat into training and test set.
   dTrain <- dat[dat$E %in% trainEnv, ]

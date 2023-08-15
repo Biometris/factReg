@@ -73,7 +73,7 @@ nGE <- function(dat,
     return(list(pred = g))
   } else {
     for (j in 1:nEnv) {
-      envDat <- dat[dat$E == environments[j],]
+      envDat <- dat[dat$E == environments[j], ]
       envDat <- droplevels(envDat)
       kinMod  <- rrBLUP::kin.blup(data = envDat, geno = "G", pheno = "Y",
                                   K = K, PEV = TRUE)
