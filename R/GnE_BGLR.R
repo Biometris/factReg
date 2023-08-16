@@ -5,7 +5,7 @@
 #' \loadmathjax
 #' here comes the description
 #'
-#' @inheritParams GnE_glmnet
+#' @inheritParams GnE
 #'
 #' @param K ...
 #' @param nIter ...
