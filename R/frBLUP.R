@@ -135,25 +135,23 @@ frBLUP <- function(dat,
     treG <- as.character(unique(dat$G[dat$type == "GE"]))
     tstG <- setdiff(levels(dat$G), treG)
     datG <- droplevels(dat[dat$type %in% c("GE", "nGE"), ])
-    datG$Y[datG$G %in% tstG] <- NA
-    gblups <- nGE(dat = datG, Y = "Y", G = "G", E = "E", K = K)
-    gblups$pred <- gblups$pred[rownames(gblups$pred) %in% rownames(dat), ]
-    # for the new environments, having yield itself is useful for evaluating nGnE
-    dat$gblup <- dat$Y
-    dat$weight <- NA
-    dat[rownames(gblups$pred), "gblup"] <- gblups$pred$value
-    # or without sqrt ???
-    dat[rownames(gblups$pred), "weight"] <- 1 / sqrt(gblups$pred$PEV)
   } else if (target == "GnE") {
     datG <- droplevels(dat[dat$type == "GE", ])
-    gblups <- nGE(dat = datG, Y = "Y", G = "G", E = "E", K = K)
-    gblups$pred <- gblups$pred[rownames(gblups$pred) %in% rownames(dat), ]
-    # for the new environments, having yield itself is useful for evaluating nGnE
-    dat$gblup <- dat$Y
-    dat$weight <- NA
-    dat[rownames(gblups$pred), "gblup"]  <- gblups$pred$value
-    # or without sqrt ???
-    dat[rownames(gblups$pred), "weight"] <- 1 / sqrt(gblups$pred$PEV)
+  }
+  datG$Y[datG$G %in% tstG] <- NA
+  gblups <- nGE(dat = datG, Y = "Y", G = "G", E = "E", K = K)
+  # for the new environments, having yield itself is useful for evaluating nGnE
+  dat$gblup <- dat$Y
+  dat$weight <- NA
+  dat <- merge(dat, gblups$pred, by = c("G", "E"), all.x = TRUE, all.y = TRUE)
+  dat[!is.na(dat$value), "gblup"] <- dat[!is.na(dat$value), "value"]
+  # or without sqrt ???
+  dat[!is.na(dat$PEV), "weight"] <- 1 / sqrt(dat[!is.na(dat$PEV), "PEV"])
+  for (ind in indices) {
+    indMean <- tapply(X = dat[[ind]], INDEX = dat$E, FUN = mean, na.rm = TRUE)
+    dat[is.na(dat[[ind]]), ind] <-
+      indMean[match(x = dat[is.na(dat[[ind]]), "E"],
+                    table = names(indMean))]
   }
   names(dat)[names(dat) == "Y"] <- "Yobs"
   if (sum(is.na(dat[dat$type %in% c("GE", "nGE"), "weight"])) > 0) {
