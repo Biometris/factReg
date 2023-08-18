@@ -135,10 +135,10 @@ frBLUP <- function(dat,
     treG <- as.character(unique(dat$G[dat$type == "GE"]))
     tstG <- setdiff(levels(dat$G), treG)
     datG <- droplevels(dat[dat$type %in% c("GE", "nGE"), ])
+    datG$Y[datG$G %in% tstG] <- NA
   } else if (target == "GnE") {
     datG <- droplevels(dat[dat$type == "GE", ])
   }
-  datG$Y[datG$G %in% tstG] <- NA
   gblups <- nGE(dat = datG, Y = "Y", G = "G", E = "E", K = K)
   # for the new environments, having yield itself is useful for evaluating nGnE
   dat$gblup <- dat$Y
