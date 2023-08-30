@@ -223,8 +223,6 @@ GnE_BGLR <- function(dat,
                              s1, s2),
                MAD = mapply(FUN = function(x, y) {mean(abs(x - y), na.rm = TRUE)},
                             s1, s2),
-               rank = mapply(FUN = exRank,
-                             s1, s2),
                row.names = NULL)
 
   trainAccuracyGeno <-
@@ -251,8 +249,6 @@ GnE_BGLR <- function(dat,
                                s1t, s2t),
                  MAD = mapply(FUN = function(x, y) {mean(abs(x - y), na.rm = TRUE)},
                               s1t, s2t),
-                 rank = mapply(FUN = exRank,
-                               s1t, s2t),
                  row.names = NULL)
   }
   ## Create RMSE.
