@@ -51,6 +51,28 @@ corFun <- function(x,
 #'
 #' @noRd
 #' @keywords internal
+RMSEFun <- function(x, y) {
+  sqrt(mean((x - y) ^ 2))
+}
+
+
+#' Helper function
+#'
+#' Helper function for ....
+#'
+#' @noRd
+#' @keywords internal
+MADFun <- function(x, y) {
+  mean(abs(x - y))
+}
+
+
+#' Helper function
+#'
+#' Helper function for ....
+#'
+#' @noRd
+#' @keywords internal
 getAccuracyEnv <- function(datNew,
                            datPred,
                            datPredMain,
@@ -60,13 +82,6 @@ getAccuracyEnv <- function(datNew,
   sNew <- split(datNew, datE)
   sPred <- split(datPred, datE)
   sPredMain <- split(datPredMain, datE)
-  ## Define helper functions.
-  RMSEFun <- function(x, y) {
-    sqrt(mean((x - y) ^ 2))
-  }
-  MADFun <- function(x, y) {
-    mean(abs(x - y))
-  }
   ## Compute statistics for test data.
   accuracy <- data.frame(Env = levels(datE),
                          r = mapply(FUN = corFun, sNew, sPred,
