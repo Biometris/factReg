@@ -16,7 +16,6 @@ GnE(
   weight = NULL,
   outputFile = NULL,
   corType = c("pearson", "spearman"),
-  partition = data.frame(),
   nfolds = 10,
   alpha = 1,
   lambda = NULL,
@@ -82,17 +81,7 @@ for training and test environments are written to separate files. If
 
 \item{corType}{type of correlation: Pearson (default) or Spearman rank sum.}
 
-\item{partition}{\code{data.frame} with columns E and partition. The column
-E should contain the training environments (type character); partition
-should be of type integer. Environments in the same fold should have
-the same integer value. Default is \code{data.frame()}, in which case the
-function uses a leave-one-environment out cross-validation. If \code{NULL},
-the (inner) training sets used for cross-validation will be drawn randomly
-from all observations, ignoring the environment structure. In the latter
-case, the number of folds (nfolds) can be specified.}
-
-\item{nfolds}{Default \code{NULL}. If \code{partition == NULL}, this can be
-used to specify the number of folds to be used in glmnet.}
+\item{nfolds}{Default 10, the number of  folds to be used in glmnet.}
 
 \item{alpha}{Type of penalty, as in glmnet (1 = LASSO, 0 = ridge; in between
 = elastic net). Default is 1.}
