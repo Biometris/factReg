@@ -170,8 +170,7 @@ penalizing \mjeqn{e_j}{ascii}, \mjeqn{g_i}{ascii} and
 \mjeqn{\beta_{ik}}{ascii}. If \code{penG = 0} and \code{penE = 0}, the main
 effects \mjeqn{g_i}{ascii} and \mjeqn{e_j}{ascii} are not penalized. If these
 parameters are 1, the the main effects are penalized to the same degree as
-the sensitivities. Any non negative values are allowed. Cross validation is
-performed with each fold containing a number of environments (details below).
+the sensitivities. Any non negative values are allowed.
 
 After fitting the model, it is possible to replace the estimated
 genotypic main effects and sensitivities by
