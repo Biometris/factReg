@@ -283,8 +283,8 @@ GnE <- function(dat,
   trainEnv <- setdiff(levels(dat$E), testEnv)
   ## Remove missing values from training envs.
   dat <- dat[!(is.na(dat$Y) & dat$E %in% trainEnv), ]
-  redundantGeno <- names(which(table(dat$G[!is.na(dat$Y) &
-                                             dat$E %in% trainEnv]) < 10))
+  redundantGeno <- names(which(table(droplevels(dat$G[!is.na(dat$Y) &
+                                                        dat$E %in% trainEnv])) < 10))
   if (length(redundantGeno) > 0) {
     warning("the following genotypes have < 10 observations, and are removed:",
             "\n\n", paste(redundantGeno, collapse = ", "), "\n")
