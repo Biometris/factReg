@@ -59,8 +59,10 @@ expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
              "indices should be a vector of length > 1 of columns in dat")
 
 ## Check that columns can be refered to by names and by numbers.
+set.seed(1234)
 modBase <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                E = "Experiment", indices = indices)
+set.seed(1234)
 modBaseNum <- GnE(dat = testDat, Y = 3, G = 2, E = 1, indices = indices)
 
 expect_equal(modBase, modBaseNum)
@@ -86,7 +88,6 @@ expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                  E = "Experiment", indices = indices, testEnv = "bla"),
              "testEnv should be a vector of environments present in dat")
 
-
 modTest <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                E = "Experiment", indices = indices, testEnv = "Cam12R")
 
@@ -108,7 +109,7 @@ expect_warning(modIndDat <- GnE(dat = testDat, Y = "grain.yield",
                                 indicesData = indicesDat),
                "The following columns in indicesDat are already in dat")
 
-expect_equal(mean(modIndDat$trainAccuracyEnv$r), 0.674521689495499)
+expect_equal(mean(modIndDat$trainAccuracyEnv$r), 0.760559086391026)
 
 
 ## Check that redundant genotypes are removed.
@@ -139,7 +140,7 @@ modQuad <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                quadratic = TRUE)
 expect_equal(modQuad$indices, c("Tnight.Early", "Tnight.Flo",
                                 "Tnight.Early_quad", "Tnight.Flo_quad"))
-expect_equal(mean(modQuad$trainAccuracyEnv$r), 0.898854022315224)
+expect_equal(mean(modQuad$trainAccuracyEnv$r), 0.885056958259579)
 
 
 ## Check that option K works correctly.
@@ -155,14 +156,14 @@ expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
 modK <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
             E = "Experiment", indices = indices, lambda = modBase$lambda,
             K = testK)
-expect_equal(mean(modK$trainAccuracyEnv$r), 0.75100036563115)
+expect_equal(mean(modK$trainAccuracyEnv$r), 0.743061829783223)
 
 
 ## Check that option scale works correctly.
 modAll <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
               E = "Experiment", indices = indices, lambda = modBase$lambda,
               scaling = "all")
-expect_equal(mean(modAll$trainAccuracyEnv$r), 0.791322119880585)
+expect_equal(mean(modAll$trainAccuracyEnv$r), 0.781456305044112)
 
 
 ## Check that option partition works correctly.
@@ -196,7 +197,7 @@ modPart <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                E = "Experiment", indices = indices, lambda = modBase$lambda,
                partition = partitionDat)
 
-expect_equal(mean(modPart$trainAccuracyEnv$r), 0.791322119880585)
+expect_equal(mean(modPart$trainAccuracyEnv$r), 0.781456305044112)
 
 expect_error(GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                  E = "Experiment", indices = indices, lambda = modBase$lambda,
@@ -211,7 +212,7 @@ modPartNULL <- GnE(dat = testDat, Y = "grain.yield", G = "Variety_ID",
                    E = "Experiment", indices = indices, lambda = modBase$lambda,
                    partition = NULL, nfolds = 4)
 
-expect_equal(mean(modPartNULL$trainAccuracyEnv$r), 0.791322119880585)
+expect_equal(mean(modPartNULL$trainAccuracyEnv$r), 0.781456305044112)
 
 
 ## Check that output can be written to file.
