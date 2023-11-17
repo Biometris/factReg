@@ -78,7 +78,16 @@
 #' for training and test environments are written to separate files. If
 #' \code{NULL} the output is not written to file.
 #' @param corType type of correlation: Pearson (default) or Spearman rank sum.
-#' @param nfolds Default 10, the number of  folds to be used in glmnet.
+#' @param partition \code{data.frame} with columns E and partition. The column
+#' E should contain the training environments (type character); partition
+#' should be of type integer. Environments in the same fold should have
+#' the same integer value. Default is \code{data.frame()}, in which case the
+#' function uses a leave-one-environment out cross-validation. If \code{NULL},
+#' the (inner) training sets used for cross-validation will be drawn randomly
+#' from all observations, ignoring the environment structure. In the latter
+#' case, the number of folds (nfolds) can be specified.
+#' @param nfolds Default \code{NULL}. If \code{partition == NULL}, this can be
+#' used to specify the number of folds to be used in glmnet.
 #' @param alpha Type of penalty, as in glmnet (1 = LASSO, 0 = ridge; in between
 #'  = elastic net). Default is 1.
 #' @param lambda Numeric vector; defines the grid over which the penalty lambda
@@ -202,6 +211,7 @@ GnE <- function(dat,
                 weight = NULL,
                 outputFile = NULL,
                 corType = c("pearson", "spearman"),
+                partition = data.frame(),
                 nfolds = 10,
                 alpha = 1,
                 lambda = NULL,
@@ -333,9 +343,38 @@ GnE <- function(dat,
   nEnvTest <- length(testEnv)
   nEnvTrain <- nEnv - nEnvTest
   nGenoTrain <- nlevels(dTrain$G)
-  ## Do leave one environment out cross-validation.
-  if (!is.numeric(nfolds) || length(nfolds) > 1 || nfolds < 4) {
-    stop("nfolds should be a numeric value of 4 or more.\n")
+  ## When partition == data.frame() (the default),
+  ## do leave one environment out cross-validation.
+  if (!is.null(partition)) {
+    if (!inherits(partition, "data.frame")) {
+      stop("partition should be a data.frame.\n")
+    }
+    if (ncol(partition) == 0) {
+      partition <- unique(data.frame(E = dTrain$E,
+                                     partition = as.numeric(dTrain$E)))
+    } else {
+      if (!setequal(colnames(partition), c("E", "partition"))) {
+        stop("partition should have columns E and partition.\n")
+      }
+      if (!is.numeric(partition$partition) ||
+          length(unique(partition$partition)) < 4) {
+        stop("Column partition in partition should be a numeric column with",
+             "at least 4 different values.\n")
+      }
+      if (!all(levels(dTrain$E) %in% partition$E)) {
+        stop("All training environments should be in partition.\n")
+      }
+      partition <- partition[partition$E %in% trainEnv, ]
+    }
+    ## Construct foldid from partition
+    foldDat <- merge(dTrain, partition)
+    foldid <- foldDat$partition
+    nfolds <- length(unique(foldid))
+  } else {
+    foldid <- NULL
+    if (!is.numeric(nfolds) || length(nfolds) > 1 || nfolds < 4) {
+      stop("nfolds should be a numeric value of 4 or more.\n")
+    }
   }
   mm <- Matrix::sparse.model.matrix(Y ~ E + G, data = dTrain)
   modelMain <- glmnet::glmnet(y = dTrain$Y, x = mm, thresh = 1e-18, lambda = 0)
@@ -382,7 +421,7 @@ GnE <- function(dat,
     glmnetOutA <- glmnet::cv.glmnet(x = ma[1:nrow(dTrain), ], y = dTrain$Y,
                                     lambda = lambda,
                                     weights = dTrain$W,
-                                    nfolds = nfolds,
+                                    # foldid = foldid, nfolds = nfolds,
                                     alpha = alpha, standardize = TRUE,
                                     penalty.factor = penaltyFactorA,
                                     grouped = nrow(dTrain) / nfolds >= 3,
@@ -445,8 +484,8 @@ GnE <- function(dat,
   if (!is.null(testEnv)) {
     ## Make predictions for test set.
     predTest <- data.frame(E = dTest$E, G = dTest$G,
-                           pred = as.numeric(ma[(nrow(dTrain)+ 1):(nrow(dTrain) + nrow(dTest)), ] %*%
-                                               cfePred + mu))
+               pred = as.numeric(ma[(nrow(dTrain)+ 1):(nrow(dTrain) + nrow(dTest)), ] %*%
+                                   cfePred + mu))
     resTest <- data.frame(E = dTest$E, G = dTest$G,
                           res = dTest$Y - predTest$pred)
   } else {
@@ -463,18 +502,35 @@ GnE <- function(dat,
                           by.y = "row.names")
   colnames(indFrameTrain)[ncol(indFrameTrain)] <- "envMainFitted"
   colnames(indFrameTrain2)[ncol(indFrameTrain2)] <- "envMainFitted"
+  if (!is.null(partition)) {
+    indFrameTrain <- merge(indFrameTrain, partition)
+    indFrameTrain2 <- merge(indFrameTrain2, partition)
+  }
   rownames(indFrameTrain) <- indFrameTrain$E
   rownames(indFrameTrain2) <- indFrameTrain2$E
   ## predict env. main effects.
   ## note : parEnvTrain and parEnvTest will now be matrices; not vectors.
-  glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
-                                 y = indFrameTrain$envMainFitted,
-                                 alpha = alpha, nfolds = nfolds,
-                                 grouped = nrow(dTrain) / nfolds < 3)
-  glmnetOut2 <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain2[, indices]),
-                                  y = indFrameTrain2$envMainFitted,
-                                  alpha = alpha, nfolds = nfolds,
-                                  grouped = nrow(dTrain) / nfolds < 3)
+  if (is.null(partition)) {
+    glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
+                                   y = indFrameTrain$envMainFitted,
+                                   alpha = alpha, nfolds = nfolds,
+                                   grouped = nrow(dTrain) / nfolds < 3)
+    glmnetOut2 <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain2[, indices]),
+                                    y = indFrameTrain2$envMainFitted,
+                                    alpha = alpha, nfolds = nfolds,
+                                    grouped = nrow(dTrain) / nfolds < 3)
+  } else {
+    glmnetOut <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain[, indices]),
+                                   y = indFrameTrain$envMainFitted,
+                                   alpha = alpha,
+                                   foldid = indFrameTrain$partition,
+                                   grouped = max(table(indFrameTrain$partition)) > 2)
+    glmnetOut2 <- glmnet::cv.glmnet(x = as.matrix(indFrameTrain2[, indices]),
+                                    y = indFrameTrain2$envMainFitted,
+                                    alpha = alpha,
+                                    foldid = indFrameTrain2$partition,
+                                    grouped = max(table(indFrameTrain2$partition)) > 2)
+  }
   parEnvTrain <- predict(object = glmnetOut,
                          newx = as.matrix(indFrameTrain[, indices]),
                          s = "lambda.min")
