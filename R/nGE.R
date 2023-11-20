@@ -70,7 +70,7 @@ nGE <- function(dat,
         pred[names(pr), "value"] <- as.numeric(pr)
       }
     }
-    return(list(pred = g))
+    return(list(pred = pred))
   } else {
     for (j in 1:nEnv) {
       envDat <- dat[dat$E == environments[j], ]
