@@ -44,7 +44,7 @@ yhats3 <- read.csv("testScripts/paper/apsim_Oct2023/GnE5_test_exp_pred2")
 yhats4 <- read.csv("testScripts/paper/apsim_Oct2023/GnE6_test_exp_pred2")
 
 ## Load APSIM data.
-load("M:/data/apsim.RData")
+load("data-raw/apsim.RData")
 GEGnE_apsim <- droplevels(all_apsim[all_apsim$type %in% c("GE", "GnE"), ])
 
 ## Column X0 in results contains inputs, column X0.1 model predictions.
